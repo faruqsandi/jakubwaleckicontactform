@@ -1,0 +1,12 @@
+for each site:
+1. check if it can loaded successfully.
+    - does it have cloudflare protection?
+2. find kontak page.
+    - using xml?
+    - using search pattern
+    - using google search?
+    - using AI.
+3. check if contact page loaded successfully
+    - check for captcha
+4. Find form fields
+5. Send form.
