@@ -6,7 +6,7 @@ It includes classes for link extraction and search operations.
 """
 
 from urllib.parse import urljoin
-from typing import List, Tuple, Optional, Any
+from typing import Any
 from bs4 import BeautifulSoup, Tag
 from selenium import webdriver
 from selenium.webdriver.common.by import By
