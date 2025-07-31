@@ -96,7 +96,7 @@ Analyze the following HTML source code and extract contact form information. Ret
 }}
 
 Rules:
-- FIELD_TYPE can only be: "name", "telephone", "email", "message"
+- FIELD_TYPE can only be: "name", "telephone", "email", "message", "unknown"
 - PROTECTION_TYPE can only be: "captcha"
 - PROTECTION_PROVIDER can be: "recaptcha", "hcaptcha", "cloudflare", "custom", "unknown"
 - Look for form elements like input, textarea, select
