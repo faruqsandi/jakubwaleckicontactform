@@ -64,27 +64,3 @@ class ContactFormDetection(Base):
 
     def __repr__(self) -> str:
         return f"<ContactFormDetection(id={self.id}, domain='{self.domain_name}', form_present={self.contact_form_present})>"
-
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert the model instance to a dictionary for easy serialization."""
-        return {
-            "id": self.id,
-            "domain_name": self.domain_name,
-            "website_antibot_detection": self.website_antibot_detection,
-            "website_antibot_details": self.website_antibot_details,
-            "form_url": self.form_url,
-            "contact_form_present": self.contact_form_present,
-            "form_antibot_detection": self.form_antibot_detection,
-            "form_antibot_type": self.form_antibot_type,
-            "form_antibot_details": self.form_antibot_details,
-            "form_fields": self.form_fields,
-            "field_selectors": self.field_selectors,
-            "submit_button_selector": self.submit_button_selector,
-            "detection_date": self.detection_date.isoformat() if self.detection_date else None,
-            "last_updated": self.last_updated.isoformat() if self.last_updated else None,
-            "form_method": self.form_method,
-            "form_action": self.form_action,
-            "detection_confidence": self.detection_confidence,
-            "detection_status": self.detection_status,
-            "error_message": self.error_message
-        }
