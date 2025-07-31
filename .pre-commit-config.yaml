@@ -1,0 +1,121 @@
+---
+repos:
+  # Linting & Formatting
+  # - repo: https://github.com/PyCQA/autoflake
+  #   rev: v2.3.1
+  #   hooks:
+  #     - id: autoflake
+  #       args:
+  #         - --remove-all-unused-imports
+  #         - --remove-unused-variables
+  #         - --in-place
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.5
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  # Security
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+  # - repo: https://github.com/semgrep/pre-commit
+  #   rev: v1.128.1
+  #   hooks:
+  #     - id: semgrep
+  #       args: [--config=auto]
+  # - repo: https://github.com/twu/skjold
+  #   rev: v0.6.2
+  #   hooks:
+  #     - id: skjold
+  #       verbose: true
+  #       # args: [requirements.txt, freeze.txt, pyproject.toml]
+  #       args: [requirements.txt]
+  #       always_run: true
+  #       pass_filenames: false
+
+  # Formatting & Utilities
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args:
+          - --ignore-words=codespell-ignore.txt
+          - --skip=*.md,*.po
+
+  # YAML Formatting & Linting
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args: [--format, parsable, --strict]
+  - repo: https://github.com/lyz-code/yamlfix
+    rev: 1.17.0
+    hooks:
+      - id: yamlfix
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.20.0
+    hooks:
+      - id: pyupgrade
+        args: [--py311-plus]
+
+  #  # Type Checking
+  # - repo: https://github.com/RobertCraigie/pyright-python
+  #   rev: v1.1.400
+  #   hooks:
+  #     - id: pyright
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: v1.17.0
+  #   hooks:
+  #     - id: mypy
+  #       args:
+  #         - --ignore-missing-imports
+  #         - --install-types
+  #         - --non-interactive
+  #         - --check-untyped-defs
+  #         - --show-error-codes
+  #         - --show-error-context
+
+  #  # Additional Linting
+  # - repo: https://github.com/PyCQA/flake8
+  #   rev: 6.1.0
+  #   hooks:
+  #     - id: flake8
+  - repo: https://github.com/jendrikseipp/vulture
+    rev: v2.14
+    hooks:
+      - id: vulture
+        args:
+          - --exclude
+          - "*/site-packages/*,*/venv/*,*/.venv/*,*/__pycache__/*,./migrations/*"
+          - --min-confidence
+          - "80"
+          - .
+
+  # Git Linting
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.19.1
+    hooks:
+      - id: gitlint
+        stages: [commit-msg]
+  - repo: https://github.com/Lucas-C/pre-commit-hooks-bandit
+    rev: v1.0.6
+    hooks:
+      - id: python-bandit-vulnerability-check
+        args:
+          - --skip
+          - B101
+          - --recursive
+          - .
+          - --exclude
+          - "*/site-packages/*,*/venv/*,*/.venv/*"
+          - --severity-level
+          - medium
