@@ -7,7 +7,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import time
 import chromedriver_autoinstaller
-
+from gpt import select_contact_url, gemini_client
+from helper import get_all_links_from_source
 
 chromedriver_autoinstaller.install()
 options = Options()
@@ -22,36 +23,102 @@ driver.get(url)
 
 source = driver.page_source
 
-soup = BeautifulSoup(source, "html.parser")
+all_links = get_all_links_from_source(source, url)
+contact_page = select_contact_url(gemini_client, all_links)
 
-links = soup.find_all("a")
+
+driver.get(contact_page)
+contact_page_source = driver.page_source
 
 
-link_list = []
-# Extract text and href
-for link in links:
-    text = link.get_text(strip=True)
-    href = link.get("href")
-    if href and text:
-        if href == "#":
-            continue
-        href = urljoin(url, href)  # Make sure href is absolute
-        link_list.append((text, href))
+def get_form_information(source: str) -> dict:
+    """
+    Analyze HTML source to extract contact form information using Gemini AI.
 
-# Step 2: Search for something
-search_box = driver.find_element(By.NAME, "q")
-search_box.send_keys("site:openai.com ChatGPT")
-search_box.send_keys(Keys.RETURN)
+    Args:
+        source (str): HTML source code of the page containing the contact form
 
-# Wait for results to load
-time.sleep(2)  # Replace with WebDriverWait if needed
+    Returns:
+        dict: Form information including fields and protection mechanisms
+    """
+    prompt = f"""
+Analyze the following HTML source code and extract contact form information. Return your response as a valid JSON object with the following structure:
 
-# Step 3: Click first result
-first_result = driver.find_element(By.CSS_SELECTOR, "h3")
-first_result.click()
+{{
+    "fields": [
+        {{
+            "label": "field label text",
+            "selector": "CSS selector or name attribute to identify the field",
+            "type": "FIELD_TYPE"
+        }}
+    ],
+    "submit_button": {{
+        "label": "submit button text",
+        "selector": "CSS selector or name attribute to identify the submit button"
+    }},
+    "protection": [
+        {{
+            "type": "PROTECTION_TYPE",
+            "issuer": "PROTECTION_PROVIDER"
+        }}
+    ]
+}}
 
-# Step 4: Wait and print title of the result page
-time.sleep(2)  # Replace with WebDriverWait if needed
-print("Page title:", driver.title)
+Rules:
+- FIELD_TYPE can only be: "name", "telephone", "email", "message"
+- PROTECTION_TYPE can only be: "captcha"
+- PROTECTION_PROVIDER can be: "recaptcha", "hcaptcha", "cloudflare", "custom", "unknown"
+- Look for form elements like input, textarea, select
+- Identify field types based on labels, names, types, or placeholders
+- Find the submit button (input[type="submit"], button[type="submit"], or button inside form)
+- Detect protection mechanisms like reCAPTCHA, hCaptcha, etc.
+- If no protection is found, return empty protection array
+- If no submit button is found, return null for submit_button
+- Only return the JSON object, no additional text
 
+HTML Source:
+{source}
+"""
+
+    try:
+        response = gemini_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+
+        # Extract JSON from response
+        response_text = response.text.strip()
+
+        # Remove any markdown code blocks if present
+        if response_text.startswith('```json'):
+            response_text = response_text[7:-3].strip()
+        elif response_text.startswith('```'):
+            response_text = response_text[3:-3].strip()
+
+        # Parse JSON response
+        import json
+        form_info = json.loads(response_text)
+
+        return form_info
+
+    except Exception as e:
+        print(f"Error analyzing form: {e}")
+        return {
+            "fields": [],
+            "submit_button": None,
+            "protection": []
+        }
+
+
+form_info = get_form_information(contact_page_source)
+fields = form_info.get("fields", [])
+protection = form_info.get("protection", [])
+submit_button = form_info.get("submit_button", None)
+
+
+# Analyze the contact form
+form_info = get_form_information(contact_page_source)
+print("Form analysis result:", form_info)
+
+# Close the browser
 driver.quit()

@@ -1,3 +1,7 @@
+from urllib.parse import urljoin
+from bs4 import BeautifulSoup
+
+
 def get_all_links_from_source(source: str, base_url: str) -> list[tuple[str, str]]:
     """
     Extract all links from the given HTML source code.
@@ -9,8 +13,6 @@ def get_all_links_from_source(source: str, base_url: str) -> list[tuple[str, str
     Returns:
         list[tuple[str, str]]: A list of tuples containing link text and href.
     """
-    from urllib.parse import urljoin
-    from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(source, "html.parser")
     links = soup.find_all("a")
@@ -22,6 +24,7 @@ def get_all_links_from_source(source: str, base_url: str) -> list[tuple[str, str
         if href and text:
             if href == "#":
                 continue
+            # This urljoin can handle both slash and no slash
             href = urljoin(base_url, href)  # Make sure href is absolute
             link_list.append((text, href))
 

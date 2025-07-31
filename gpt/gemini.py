@@ -1,8 +1,9 @@
 from google import genai
 import re
-
+from config import Config
+config = Config()
 # The client gets the API key from the environment variable `GEMINI_API_KEY`.
-gemini_client = genai.Client()
+gemini_client = genai.Client(api_key=config.GOOGLE_AI_API_KEY)
 
 # response = client.models.generate_content(
 #     model="gemini-2.5-flash", contents="Explain how AI works in a few words"
