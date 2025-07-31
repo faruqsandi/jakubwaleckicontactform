@@ -1,6 +1,5 @@
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
-import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -23,18 +22,18 @@ driver.get(url)
 
 source = driver.page_source
 
-soup = BeautifulSoup(source, 'html.parser')
+soup = BeautifulSoup(source, "html.parser")
 
-links = soup.find_all('a')
+links = soup.find_all("a")
 
 
 link_list = []
 # Extract text and href
 for link in links:
     text = link.get_text(strip=True)
-    href = link.get('href')
+    href = link.get("href")
     if href and text:
-        if href == '#':
+        if href == "#":
             continue
         href = urljoin(url, href)  # Make sure href is absolute
         link_list.append((text, href))
@@ -48,7 +47,7 @@ search_box.send_keys(Keys.RETURN)
 time.sleep(2)  # Replace with WebDriverWait if needed
 
 # Step 3: Click first result
-first_result = driver.find_element(By.CSS_SELECTOR, 'h3')
+first_result = driver.find_element(By.CSS_SELECTOR, "h3")
 first_result.click()
 
 # Step 4: Wait and print title of the result page
