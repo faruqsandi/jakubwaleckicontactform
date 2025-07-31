@@ -4,7 +4,7 @@ Example usage of the web_scraper module.
 This file demonstrates how to use the refactored web scraper functionality.
 """
 
-from web_scraper import WebScraper, WebDriver, LinkExtractor, SearchEngine
+from web_scraper import WebScraper, WebDriver, LinkExtractor
 
 
 def main():

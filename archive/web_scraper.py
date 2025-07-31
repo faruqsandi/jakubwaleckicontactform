@@ -16,7 +16,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-import time
+
 try:
     import chromedriver_autoinstaller
 except ImportError:
@@ -44,7 +44,7 @@ class WebDriver:
 
         options = Options()
         if headless:
-            options.add_argument('--headless')
+            options.add_argument("--headless")
 
         service = Service()
         return webdriver.Chrome(service=service, options=options)
@@ -88,7 +88,9 @@ class LinkExtractor:
         """
         self.web_driver = web_driver
 
-    def extract_links(self, url: str, filter_empty: bool = True) -> List[Tuple[str, str]]:
+    def extract_links(
+        self, url: str, filter_empty: bool = True
+    ) -> list[tuple[str, str]]:
         """
         Extract all links from a web page.
 
@@ -103,7 +105,7 @@ class LinkExtractor:
         soup = BeautifulSoup(source, "html.parser")
         links = soup.find_all("a")
 
-        link_list: List[Tuple[str, str]] = []
+        link_list: list[tuple[str, str]] = []
         for link in links:
             if not isinstance(link, Tag):
                 continue
@@ -125,7 +127,9 @@ class LinkExtractor:
 
         return link_list
 
-    def extract_links_by_selector(self, url: str, selector: str) -> List[Tuple[str, str]]:
+    def extract_links_by_selector(
+        self, url: str, selector: str
+    ) -> list[tuple[str, str]]:
         """
         Extract links matching a specific CSS selector.
 
@@ -140,7 +144,7 @@ class LinkExtractor:
         soup = BeautifulSoup(source, "html.parser")
         links = soup.select(selector)
 
-        link_list: List[Tuple[str, str]] = []
+        link_list: list[tuple[str, str]] = []
         for link in links:
             if not isinstance(link, Tag):
                 continue
@@ -167,7 +171,9 @@ class SearchEngine:
         """
         self.web_driver = web_driver
 
-    def google_search(self, query: str, search_url: str = "https://www.google.com") -> Optional[str]:
+    def google_search(
+        self, query: str, search_url: str = "https://www.google.com"
+    ) -> str | None:
         """
         Perform a Google search and click the first result.
 
@@ -183,16 +189,16 @@ class SearchEngine:
             self.web_driver.driver.get(search_url)
 
             # Find search box and perform search
-            search_box = WebDriverWait(self.web_driver.driver, self.web_driver.timeout).until(
-                EC.presence_of_element_located((By.NAME, "q"))
-            )
+            search_box = WebDriverWait(
+                self.web_driver.driver, self.web_driver.timeout
+            ).until(EC.presence_of_element_located((By.NAME, "q")))
             search_box.send_keys(query)
             search_box.send_keys(Keys.RETURN)
 
             # Wait for results and click first result
-            first_result = WebDriverWait(self.web_driver.driver, self.web_driver.timeout).until(
-                EC.element_to_be_clickable((By.CSS_SELECTOR, "h3"))
-            )
+            first_result = WebDriverWait(
+                self.web_driver.driver, self.web_driver.timeout
+            ).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "h3")))
             first_result.click()
 
             # Wait for page to load and return title
@@ -206,7 +212,9 @@ class SearchEngine:
             print(f"Search failed: {e}")
             return None
 
-    def search_and_extract_results(self, query: str, max_results: int = 10) -> List[Tuple[str, str]]:
+    def search_and_extract_results(
+        self, query: str, max_results: int = 10
+    ) -> list[tuple[str, str]]:
         """
         Perform a search and extract result links without clicking them.
 
@@ -222,9 +230,9 @@ class SearchEngine:
             self.web_driver.driver.get("https://www.google.com")
 
             # Perform search
-            search_box = WebDriverWait(self.web_driver.driver, self.web_driver.timeout).until(
-                EC.presence_of_element_located((By.NAME, "q"))
-            )
+            search_box = WebDriverWait(
+                self.web_driver.driver, self.web_driver.timeout
+            ).until(EC.presence_of_element_located((By.NAME, "q")))
             search_box.send_keys(query)
             search_box.send_keys(Keys.RETURN)
 
@@ -235,7 +243,9 @@ class SearchEngine:
 
             # Extract results
             results = []
-            result_elements = self.web_driver.driver.find_elements(By.CSS_SELECTOR, "h3")[:max_results]
+            result_elements = self.web_driver.driver.find_elements(
+                By.CSS_SELECTOR, "h3"
+            )[:max_results]
 
             for element in result_elements:
                 try:
@@ -269,7 +279,7 @@ class WebScraper:
         self.link_extractor = LinkExtractor(self.web_driver)
         self.search_engine = SearchEngine(self.web_driver)
 
-    def scrape_links(self, url: str) -> List[Tuple[str, str]]:
+    def scrape_links(self, url: str) -> list[tuple[str, str]]:
         """
         Scrape all links from a URL.
 
@@ -281,7 +291,7 @@ class WebScraper:
         """
         return self.link_extractor.extract_links(url)
 
-    def search_and_click_first(self, query: str) -> Optional[str]:
+    def search_and_click_first(self, query: str) -> str | None:
         """
         Search for a query and click the first result.
 

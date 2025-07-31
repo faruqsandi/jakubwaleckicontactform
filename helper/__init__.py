@@ -1,5 +1,3 @@
-
-
 def get_all_links_from_source(source: str, base_url: str) -> list[tuple[str, str]]:
     """
     Extract all links from the given HTML source code.
