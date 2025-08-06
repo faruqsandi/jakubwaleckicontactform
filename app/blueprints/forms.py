@@ -17,7 +17,7 @@ def missing_forms():
         flash("Please upload CSV file first.", "warning")
         return redirect(url_for("config.config_page"))
 
-    # Get domains from uploaded CSV that are in ContactFormDetection with status not "completed"
+    # Get domains from uploaded CSV that are in ContactFormDetection with all statuses
     uploaded_domains = session.get("uploaded_domains", [])
     missing_forms_data = []
 
@@ -30,19 +30,17 @@ def missing_forms():
                     detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
 
                     if detections:
-                        # Check if any detection has status other than "completed"
-                        for detection in detections:
-                            if detection.detection_status != "completed":
-                                missing_forms_data.append(
-                                    {
-                                        "domain": domain,
-                                        "status": detection.detection_status,
-                                        "form_present": detection.contact_form_present,
-                                        "form_url": detection.form_url,
-                                        "last_updated": detection.last_updated,
-                                    }
-                                )
-                                break  # Only add once per domain
+                        # Add the latest detection record for this domain
+                        latest_detection = detections[0]  # Assuming they are ordered by date
+                        missing_forms_data.append(
+                            {
+                                "domain": domain,
+                                "status": latest_detection.detection_status,
+                                "form_present": latest_detection.contact_form_present,
+                                "form_url": latest_detection.form_url,
+                                "last_updated": latest_detection.last_updated,
+                            }
+                        )
                     else:
                         # No detection record found, this shouldn't happen if config worked properly
                         missing_forms_data.append(
@@ -54,6 +52,9 @@ def missing_forms():
                                 "last_updated": None,
                             }
                         )
+
+                # Sort the data so completed records appear at the bottom
+                missing_forms_data.sort(key=lambda x: (x["status"] == "completed", x["domain"]))
 
             finally:
                 db.close()
