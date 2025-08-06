@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from sqlalchemy import String, Boolean, Text, DateTime, JSON, Integer
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 from contactform.database.models import Base
 
 

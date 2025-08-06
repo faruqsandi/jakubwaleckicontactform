@@ -5,11 +5,11 @@ This file contains basic tests for the CRUD functionality.
 """
 
 import pytest
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from contactform.database.models import Base
-from contactform.detection import ContactFormDetectionCRUD, ContactFormDetection
+from contactform.detection import ContactFormDetectionCRUD
 
 
 @pytest.fixture
@@ -38,14 +38,10 @@ def sample_detection_data():
         "form_antibot_detection": True,
         "form_antibot_type": "recaptcha",
         "form_fields": ["name", "email", "message"],
-        "field_selectors": {
-            "name": "#name",
-            "email": "#email",
-            "message": "#message"
-        },
+        "field_selectors": {"name": "#name", "email": "#email", "message": "#message"},
         "submit_button_selector": "#submit",
         "form_action": "https://testsite.com/submit",
-        "detection_status": "completed"
+        "detection_status": "completed",
     }
 
 
@@ -59,7 +55,10 @@ class TestContactFormDetectionCRUD:
         assert detection.id is not None
         assert detection.domain_name == sample_detection_data["domain_name"]
         assert detection.form_url == sample_detection_data["form_url"]
-        assert detection.contact_form_present == sample_detection_data["contact_form_present"]
+        assert (
+            detection.contact_form_present
+            == sample_detection_data["contact_form_present"]
+        )
         assert detection.form_antibot_type == sample_detection_data["form_antibot_type"]
         assert detection.form_fields == sample_detection_data["form_fields"]
         assert detection.field_selectors == sample_detection_data["field_selectors"]
@@ -70,10 +69,14 @@ class TestContactFormDetectionCRUD:
     def test_get_by_id(self, db_session, sample_detection_data):
         """Test retrieving a detection record by ID."""
         # Create a detection
-        created_detection = ContactFormDetectionCRUD.create(db_session, **sample_detection_data)
+        created_detection = ContactFormDetectionCRUD.create(
+            db_session, **sample_detection_data
+        )
 
         # Retrieve it
-        retrieved_detection = ContactFormDetectionCRUD.get_by_id(db_session, created_detection.id)
+        retrieved_detection = ContactFormDetectionCRUD.get_by_id(
+            db_session, created_detection.id
+        )
 
         assert retrieved_detection is not None
         assert retrieved_detection.id == created_detection.id
@@ -89,8 +92,16 @@ class TestContactFormDetectionCRUD:
         domain = "testdomain.com"
 
         # Create multiple detections for the same domain
-        data1 = {**sample_detection_data, "domain_name": domain, "form_url": "https://testdomain.com/contact1"}
-        data2 = {**sample_detection_data, "domain_name": domain, "form_url": "https://testdomain.com/contact2"}
+        data1 = {
+            **sample_detection_data,
+            "domain_name": domain,
+            "form_url": "https://testdomain.com/contact1",
+        }
+        data2 = {
+            **sample_detection_data,
+            "domain_name": domain,
+            "form_url": "https://testdomain.com/contact2",
+        }
 
         ContactFormDetectionCRUD.create(db_session, **data1)
         ContactFormDetectionCRUD.create(db_session, **data2)
@@ -104,7 +115,9 @@ class TestContactFormDetectionCRUD:
     def test_get_by_url(self, db_session, sample_detection_data):
         """Test retrieving a detection record by URL."""
         # Create a detection
-        created_detection = ContactFormDetectionCRUD.create(db_session, **sample_detection_data)
+        created_detection = ContactFormDetectionCRUD.create(
+            db_session, **sample_detection_data
+        )
 
         # Retrieve by URL
         retrieved_detection = ContactFormDetectionCRUD.get_by_url(
@@ -129,7 +142,7 @@ class TestContactFormDetectionCRUD:
             db_session,
             detection.id,
             detection_status=new_status,
-            form_antibot_type=new_antibot_type
+            form_antibot_type=new_antibot_type,
         )
 
         assert updated_detection is not None
@@ -178,7 +191,7 @@ class TestContactFormDetectionCRUD:
         ContactFormDetectionCRUD.create(db_session, **sample_detection_data)
         ContactFormDetectionCRUD.create(
             db_session,
-            **{**sample_detection_data, "form_url": "https://testsite.com/contact2"}
+            **{**sample_detection_data, "form_url": "https://testsite.com/contact2"},
         )
 
         final_count = ContactFormDetectionCRUD.count_all(db_session)
@@ -191,8 +204,7 @@ class TestContactFormDetectionCRUD:
 
         # Create a detection with the status
         ContactFormDetectionCRUD.create(
-            db_session,
-            **{**sample_detection_data, "detection_status": status}
+            db_session, **{**sample_detection_data, "detection_status": status}
         )
 
         final_count = ContactFormDetectionCRUD.count_by_status(db_session, status)
@@ -202,15 +214,20 @@ class TestContactFormDetectionCRUD:
         """Test getting detections with contact forms present."""
         # Create detections with and without contact forms
         ContactFormDetectionCRUD.create(
-            db_session,
-            **{**sample_detection_data, "contact_form_present": True}
+            db_session, **{**sample_detection_data, "contact_form_present": True}
         )
         ContactFormDetectionCRUD.create(
             db_session,
-            **{**sample_detection_data, "contact_form_present": False, "form_url": "https://testsite.com/no-form"}
+            **{
+                **sample_detection_data,
+                "contact_form_present": False,
+                "form_url": "https://testsite.com/no-form",
+            },
         )
 
-        detections_with_forms = ContactFormDetectionCRUD.get_with_contact_forms(db_session)
+        detections_with_forms = ContactFormDetectionCRUD.get_with_contact_forms(
+            db_session
+        )
 
         assert len(detections_with_forms) >= 1
         assert all(d.contact_form_present for d in detections_with_forms)
@@ -220,17 +237,32 @@ class TestContactFormDetectionCRUD:
         # Create detections with different anti-bot configurations
         ContactFormDetectionCRUD.create(
             db_session,
-            **{**sample_detection_data, "website_antibot_detection": True, "form_antibot_detection": False}
+            **{
+                **sample_detection_data,
+                "website_antibot_detection": True,
+                "form_antibot_detection": False,
+            },
         )
         ContactFormDetectionCRUD.create(
             db_session,
-            **{**sample_detection_data, "website_antibot_detection": False, "form_antibot_detection": True, "form_url": "https://testsite.com/form-antibot"}
+            **{
+                **sample_detection_data,
+                "website_antibot_detection": False,
+                "form_antibot_detection": True,
+                "form_url": "https://testsite.com/form-antibot",
+            },
         )
 
         # Test different levels
-        website_antibot = ContactFormDetectionCRUD.get_with_antibot_protection(db_session, "website")
-        form_antibot = ContactFormDetectionCRUD.get_with_antibot_protection(db_session, "form")
-        any_antibot = ContactFormDetectionCRUD.get_with_antibot_protection(db_session, "any")
+        website_antibot = ContactFormDetectionCRUD.get_with_antibot_protection(
+            db_session, "website"
+        )
+        form_antibot = ContactFormDetectionCRUD.get_with_antibot_protection(
+            db_session, "form"
+        )
+        any_antibot = ContactFormDetectionCRUD.get_with_antibot_protection(
+            db_session, "any"
+        )
 
         assert len(website_antibot) >= 1
         assert len(form_antibot) >= 1
@@ -242,7 +274,11 @@ class TestContactFormDetectionCRUD:
         ContactFormDetectionCRUD.create(db_session, **sample_detection_data)
         ContactFormDetectionCRUD.create(
             db_session,
-            **{**sample_detection_data, "domain_name": "searchtest.com", "form_url": "https://searchtest.com/contact"}
+            **{
+                **sample_detection_data,
+                "domain_name": "searchtest.com",
+                "form_url": "https://searchtest.com/contact",
+            },
         )
 
         # Search by domain
@@ -261,7 +297,11 @@ class TestContactFormDetectionCRUD:
         for i in range(3):
             ContactFormDetectionCRUD.create(
                 db_session,
-                **{**sample_detection_data, "domain_name": domain, "form_url": f"https://{domain}/contact{i}"}
+                **{
+                    **sample_detection_data,
+                    "domain_name": domain,
+                    "form_url": f"https://{domain}/contact{i}",
+                },
             )
 
         # Verify they exist

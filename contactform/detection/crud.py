@@ -23,13 +23,13 @@ class ContactFormDetectionCRUD:
         contact_form_present: bool = False,
         website_antibot_detection: bool = False,
         form_antibot_detection: bool = False,
-        form_antibot_type: Optional[str] = None,
-        form_fields: Optional[List[str]] = None,
-        field_selectors: Optional[Dict[str, str]] = None,
-        submit_button_selector: Optional[str] = None,
-        form_action: Optional[str] = None,
+        form_antibot_type: str | None = None,
+        form_fields: list[str] | None = None,
+        field_selectors: dict[str, str] | None = None,
+        submit_button_selector: str | None = None,
+        form_action: str | None = None,
         detection_status: str = "pending",
-        **kwargs: Any
+        **kwargs: Any,
     ) -> ContactFormDetection:
         """
         Create a new ContactFormDetection record.
@@ -64,7 +64,7 @@ class ContactFormDetectionCRUD:
             submit_button_selector=submit_button_selector,
             form_action=form_action,
             detection_status=detection_status,
-            **kwargs
+            **kwargs,
         )
 
         db.add(db_detection)
@@ -73,7 +73,7 @@ class ContactFormDetectionCRUD:
         return db_detection
 
     @staticmethod
-    def get_by_id(db: Session, detection_id: int) -> Optional[ContactFormDetection]:
+    def get_by_id(db: Session, detection_id: int) -> ContactFormDetection | None:
         """
         Get a ContactFormDetection record by ID.
 
@@ -84,16 +84,16 @@ class ContactFormDetectionCRUD:
         Returns:
             ContactFormDetection instance or None if not found
         """
-        return db.query(ContactFormDetection).filter(
-            ContactFormDetection.id == detection_id
-        ).first()
+        return (
+            db.query(ContactFormDetection)
+            .filter(ContactFormDetection.id == detection_id)
+            .first()
+        )
 
     @staticmethod
     def get_by_domain(
-        db: Session,
-        domain_name: str,
-        limit: Optional[int] = None
-    ) -> List[ContactFormDetection]:
+        db: Session, domain_name: str, limit: int | None = None
+    ) -> list[ContactFormDetection]:
         """
         Get ContactFormDetection records by domain name.
 
@@ -105,9 +105,11 @@ class ContactFormDetectionCRUD:
         Returns:
             List of ContactFormDetection instances
         """
-        query = db.query(ContactFormDetection).filter(
-            ContactFormDetection.domain_name == domain_name
-        ).order_by(desc(ContactFormDetection.detection_date))
+        query = (
+            db.query(ContactFormDetection)
+            .filter(ContactFormDetection.domain_name == domain_name)
+            .order_by(desc(ContactFormDetection.detection_date))
+        )
 
         if limit:
             query = query.limit(limit)
@@ -115,7 +117,7 @@ class ContactFormDetectionCRUD:
         return query.all()
 
     @staticmethod
-    def get_by_url(db: Session, form_url: str) -> Optional[ContactFormDetection]:
+    def get_by_url(db: Session, form_url: str) -> ContactFormDetection | None:
         """
         Get a ContactFormDetection record by form URL.
 
@@ -126,9 +128,11 @@ class ContactFormDetectionCRUD:
         Returns:
             ContactFormDetection instance or None if not found
         """
-        return db.query(ContactFormDetection).filter(
-            ContactFormDetection.form_url == form_url
-        ).first()
+        return (
+            db.query(ContactFormDetection)
+            .filter(ContactFormDetection.form_url == form_url)
+            .first()
+        )
 
     @staticmethod
     def get_all(
@@ -136,8 +140,8 @@ class ContactFormDetectionCRUD:
         skip: int = 0,
         limit: int = 100,
         order_by: str = "detection_date",
-        order_direction: str = "desc"
-    ) -> List[ContactFormDetection]:
+        order_direction: str = "desc",
+    ) -> list[ContactFormDetection]:
         """
         Get all ContactFormDetection records with pagination.
 
@@ -151,20 +155,23 @@ class ContactFormDetectionCRUD:
         Returns:
             List of ContactFormDetection instances
         """
-        order_field = getattr(ContactFormDetection, order_by, ContactFormDetection.detection_date)
+        order_field = getattr(
+            ContactFormDetection, order_by, ContactFormDetection.detection_date
+        )
         order_func = desc if order_direction.lower() == "desc" else asc
 
-        return db.query(ContactFormDetection).order_by(
-            order_func(order_field)
-        ).offset(skip).limit(limit).all()
+        return (
+            db.query(ContactFormDetection)
+            .order_by(order_func(order_field))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     @staticmethod
     def get_by_status(
-        db: Session,
-        status: str,
-        skip: int = 0,
-        limit: int = 100
-    ) -> List[ContactFormDetection]:
+        db: Session, status: str, skip: int = 0, limit: int = 100
+    ) -> list[ContactFormDetection]:
         """
         Get ContactFormDetection records by detection status.
 
@@ -177,16 +184,19 @@ class ContactFormDetectionCRUD:
         Returns:
             List of ContactFormDetection instances
         """
-        return db.query(ContactFormDetection).filter(
-            ContactFormDetection.detection_status == status
-        ).order_by(desc(ContactFormDetection.detection_date)).offset(skip).limit(limit).all()
+        return (
+            db.query(ContactFormDetection)
+            .filter(ContactFormDetection.detection_status == status)
+            .order_by(desc(ContactFormDetection.detection_date))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     @staticmethod
     def get_with_contact_forms(
-        db: Session,
-        skip: int = 0,
-        limit: int = 100
-    ) -> List[ContactFormDetection]:
+        db: Session, skip: int = 0, limit: int = 100
+    ) -> list[ContactFormDetection]:
         """
         Get ContactFormDetection records where contact forms are present.
 
@@ -198,17 +208,22 @@ class ContactFormDetectionCRUD:
         Returns:
             List of ContactFormDetection instances with contact forms
         """
-        return db.query(ContactFormDetection).filter(
-            ContactFormDetection.contact_form_present == True
-        ).order_by(desc(ContactFormDetection.detection_date)).offset(skip).limit(limit).all()
+        return (
+            db.query(ContactFormDetection)
+            .filter(ContactFormDetection.contact_form_present == True)
+            .order_by(desc(ContactFormDetection.detection_date))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     @staticmethod
     def get_with_antibot_protection(
         db: Session,
         level: str = "both",  # "website", "form", "both", "any"
         skip: int = 0,
-        limit: int = 100
-    ) -> List[ContactFormDetection]:
+        limit: int = 100,
+    ) -> list[ContactFormDetection]:
         """
         Get ContactFormDetection records with anti-bot protection.
 
@@ -228,24 +243,27 @@ class ContactFormDetectionCRUD:
         elif level == "both":
             filter_condition = and_(
                 ContactFormDetection.website_antibot_detection == True,
-                ContactFormDetection.form_antibot_detection == True
+                ContactFormDetection.form_antibot_detection == True,
             )
         else:  # "any"
             filter_condition = or_(
                 ContactFormDetection.website_antibot_detection == True,
-                ContactFormDetection.form_antibot_detection == True
+                ContactFormDetection.form_antibot_detection == True,
             )
 
-        return db.query(ContactFormDetection).filter(
-            filter_condition
-        ).order_by(desc(ContactFormDetection.detection_date)).offset(skip).limit(limit).all()
+        return (
+            db.query(ContactFormDetection)
+            .filter(filter_condition)
+            .order_by(desc(ContactFormDetection.detection_date))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     @staticmethod
     def update(
-        db: Session,
-        detection_id: int,
-        **update_data: Any
-    ) -> Optional[ContactFormDetection]:
+        db: Session, detection_id: int, **update_data: Any
+    ) -> ContactFormDetection | None:
         """
         Update a ContactFormDetection record.
 
@@ -257,9 +275,11 @@ class ContactFormDetectionCRUD:
         Returns:
             Updated ContactFormDetection instance or None if not found
         """
-        db_detection = db.query(ContactFormDetection).filter(
-            ContactFormDetection.id == detection_id
-        ).first()
+        db_detection = (
+            db.query(ContactFormDetection)
+            .filter(ContactFormDetection.id == detection_id)
+            .first()
+        )
 
         if not db_detection:
             return None
@@ -277,10 +297,8 @@ class ContactFormDetectionCRUD:
 
     @staticmethod
     def update_status(
-        db: Session,
-        detection_id: int,
-        status: str
-    ) -> Optional[ContactFormDetection]:
+        db: Session, detection_id: int, status: str
+    ) -> ContactFormDetection | None:
         """
         Update the detection status of a record.
 
@@ -308,9 +326,11 @@ class ContactFormDetectionCRUD:
         Returns:
             True if deleted successfully, False if not found
         """
-        db_detection = db.query(ContactFormDetection).filter(
-            ContactFormDetection.id == detection_id
-        ).first()
+        db_detection = (
+            db.query(ContactFormDetection)
+            .filter(ContactFormDetection.id == detection_id)
+            .first()
+        )
 
         if not db_detection:
             return False
@@ -331,9 +351,11 @@ class ContactFormDetectionCRUD:
         Returns:
             Number of deleted records
         """
-        deleted_count = db.query(ContactFormDetection).filter(
-            ContactFormDetection.domain_name == domain_name
-        ).delete()
+        deleted_count = (
+            db.query(ContactFormDetection)
+            .filter(ContactFormDetection.domain_name == domain_name)
+            .delete()
+        )
 
         db.commit()
         return deleted_count
@@ -363,9 +385,11 @@ class ContactFormDetectionCRUD:
         Returns:
             Number of records with the specified status
         """
-        return db.query(ContactFormDetection).filter(
-            ContactFormDetection.detection_status == status
-        ).count()
+        return (
+            db.query(ContactFormDetection)
+            .filter(ContactFormDetection.detection_status == status)
+            .count()
+        )
 
     @staticmethod
     def count_by_domain(db: Session, domain_name: str) -> int:
@@ -379,18 +403,20 @@ class ContactFormDetectionCRUD:
         Returns:
             Number of records for the domain
         """
-        return db.query(ContactFormDetection).filter(
-            ContactFormDetection.domain_name == domain_name
-        ).count()
+        return (
+            db.query(ContactFormDetection)
+            .filter(ContactFormDetection.domain_name == domain_name)
+            .count()
+        )
 
     @staticmethod
     def search(
         db: Session,
         search_term: str,
-        search_fields: Optional[List[str]] = None,
+        search_fields: list[str] | None = None,
         skip: int = 0,
-        limit: int = 100
-    ) -> List[ContactFormDetection]:
+        limit: int = 100,
+    ) -> list[ContactFormDetection]:
         """
         Search ContactFormDetection records by term in specified fields.
 
@@ -416,9 +442,14 @@ class ContactFormDetectionCRUD:
         if not conditions:
             return []
 
-        return db.query(ContactFormDetection).filter(
-            or_(*conditions)
-        ).order_by(desc(ContactFormDetection.detection_date)).offset(skip).limit(limit).all()
+        return (
+            db.query(ContactFormDetection)
+            .filter(or_(*conditions))
+            .order_by(desc(ContactFormDetection.detection_date))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
 
 # Convenience functions for direct usage
@@ -427,12 +458,14 @@ def create_detection(db: Session, **kwargs: Any) -> ContactFormDetection:
     return ContactFormDetectionCRUD.create(db, **kwargs)
 
 
-def get_detection(db: Session, detection_id: int) -> Optional[ContactFormDetection]:
+def get_detection(db: Session, detection_id: int) -> ContactFormDetection | None:
     """Convenience function to get a detection record by ID."""
     return ContactFormDetectionCRUD.get_by_id(db, detection_id)
 
 
-def update_detection(db: Session, detection_id: int, **kwargs: Any) -> Optional[ContactFormDetection]:
+def update_detection(
+    db: Session, detection_id: int, **kwargs: Any
+) -> ContactFormDetection | None:
     """Convenience function to update a detection record."""
     return ContactFormDetectionCRUD.update(db, detection_id, **kwargs)
 
