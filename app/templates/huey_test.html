@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+
+{% block title %}Huey Task Testing - Contact Form Manager{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="mb-4">
+            <h1><i class="bi bi-cpu"></i> Huey Background Task Testing</h1>
+            <p class="text-muted">Hidden testing page for Huey background task functionality</p>
+        </div>
+
+        <!-- Task Trigger Section -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5><i class="bi bi-play-circle"></i> Trigger Test Tasks</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Dummy Task Form -->
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-gear"></i> Dummy Task</h6>
+                        <form method="POST" action="{{ url_for('huey.trigger_dummy_task') }}">
+                            <div class="mb-3">
+                                <label for="task_name" class="form-label">Task Name</label>
+                                <input type="text" class="form-control" id="task_name" name="task_name"
+                                    value="Test Task {{ range(1, 1000) | random }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="delay_seconds" class="form-label">Delay (seconds)</label>
+                                <input type="number" class="form-control" id="delay_seconds" name="delay_seconds"
+                                    value="5" min="1" max="60" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-play"></i> Trigger Dummy Task
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Form Detection Task Form -->
+                    <div class="col-md-6">
+                        <h6><i class="bi bi-search"></i> Form Detection Task</h6>
+                        <form method="POST" action="{{ url_for('huey.trigger_form_detection') }}">
+                            <div class="mb-3">
+                                <label for="domain" class="form-label">Domain</label>
+                                <input type="text" class="form-control" id="domain" name="domain"
+                                    value="example{{ range(1, 100) | random }}.com" required>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted">This will simulate a background form detection process</small>
+                            </div>
+                            <button type="submit" class="btn btn-info">
+                                <i class="bi bi-search"></i> Trigger Form Detection
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Tasks Section -->
+        <div class="card">
+            <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-list"></i> Recent Tasks (Last 100)</h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-light" onclick="location.reload();">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                    <form method="POST" action="{{ url_for('huey.clear_completed_tasks') }}" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-trash"></i> Clear
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if recent_tasks %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Task ID</th>
+                                <th>Status</th>
+                                <th>Timestamp</th>
+                                <th>Result/Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in recent_tasks %}
+                            <tr>
+                                <td>
+                                    <code
+                                        class="small">{{ task.task_id[:20] }}{% if task.task_id|length > 20 %}...{% endif %}</code>
+                                </td>
+                                <td>
+                                    {% if task.status == 'completed' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Completed
+                                    </span>
+                                    {% elif task.status == 'pending' %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-clock"></i> Pending
+                                    </span>
+                                    {% elif task.status == 'failed' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-x-circle"></i> Failed
+                                    </span>
+                                    {% elif task.status == 'error' %}
+                                    <span class="badge bg-danger">
+                                        <i class="bi bi-exclamation-triangle"></i> Error
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-info-circle"></i> {{ task.status }}
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.timestamp %}
+                                    <small class="text-muted">
+                                        {{ task.timestamp[:19] }}
+                                    </small>
+                                    {% else %}
+                                    <small class="text-muted">Unknown</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {{ task.result[:100] }}{% if task.result|length > 100 %}...{% endif %}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-info-circle"></i> No Tasks Found</h6>
+                    <p class="mb-0">No recent tasks found. Try triggering a test task above.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5><i class="bi bi-info-circle"></i> About This Page</h5>
+            </div>
+            <div class="card-body">
+                <p>This is a hidden testing page for Huey background task functionality. It allows you to:</p>
+                <ul>
+                    <li><strong>Trigger dummy tasks:</strong> Test basic background task execution</li>
+                    <li><strong>Trigger form detection tasks:</strong> Simulate background form detection work</li>
+                    <li><strong>View recent tasks:</strong> See the last 100 tasks executed by Huey</li>
+                    <li><strong>Monitor task status:</strong> Check if tasks completed successfully</li>
+                </ul>
+
+                <div class="alert alert-warning mt-3">
+                    <h6><i class="bi bi-exclamation-triangle"></i> Important Notes:</h6>
+                    <ul class="mb-0">
+                        <li>This page is not linked from anywhere in the application</li>
+                        <li>Huey consumer must be running separately for tasks to execute</li>
+                        <li>Tasks are stored in SQLite database: <code>huey_tasks.db</code></li>
+                        <li>Start the Huey consumer with: <code>huey_consumer huey_config.huey</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="d-flex justify-content-between mt-4">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Home
+            </a>
+            <button class="btn btn-outline-secondary" onclick="location.reload();">
+                <i class="bi bi-arrow-clockwise"></i> Refresh Page
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-refresh every 30 seconds
+    setTimeout(function () {
+        location.reload();
+    }, 30000);
+
+    // Add some interactivity
+    document.addEventListener('DOMContentLoaded', function () {
+        // Random task names
+        const taskNameInput = document.getElementById('task_name');
+        if (taskNameInput) {
+            taskNameInput.addEventListener('focus', function () {
+                if (this.value.startsWith('Test Task')) {
+                    this.value = 'Test Task ' + Math.floor(Math.random() * 1000);
+                }
+            });
+        }
+
+        // Random domains
+        const domainInput = document.getElementById('domain');
+        if (domainInput) {
+            domainInput.addEventListener('focus', function () {
+                if (this.value.startsWith('example')) {
+                    this.value = 'example' + Math.floor(Math.random() * 100) + '.com';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

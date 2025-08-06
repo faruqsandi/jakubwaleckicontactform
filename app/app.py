@@ -1,5 +1,5 @@
 from flask import Flask, redirect, url_for, session, flash
-from app.blueprints import mission_bp, config_bp, forms_bp, submission_bp
+from app.blueprints import mission_bp, config_bp, forms_bp, submission_bp, huey_bp
 from contactform.mission import create_tables
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -18,6 +18,7 @@ app.register_blueprint(mission_bp)
 app.register_blueprint(config_bp)
 app.register_blueprint(forms_bp)
 app.register_blueprint(submission_bp)
+app.register_blueprint(huey_bp)
 
 
 @app.route("/")

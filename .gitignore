@@ -10,3 +10,6 @@ wheels/
 .venv
 .env
 contactform.db
+huey_tasks.db
+huey_tasks.db-wal
+huey_tasks.db-shm
