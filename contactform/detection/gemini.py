@@ -123,3 +123,70 @@ HTML Source:
     except Exception as e:
         print(f"Error analyzing form: {e}")
         return {"fields": [], "submit_button": None, "protection": []}
+
+
+def find_success_message(client: genai.Client, source: str) -> dict:
+    """
+    Analyze HTML source to find elements indicating successful form submission.
+
+    Args:
+        source (str): HTML source code of the page after form submission
+
+    Returns:
+        dict: Information about success indicators found on the page
+    """
+    prompt = f"""
+Analyze the following HTML source code to find elements that indicate a contact form was successfully submitted. Return your response as a valid JSON object with the following structure:
+
+{{
+    "success_found": true/false,
+    "success_elements": [
+        {{
+            "text": "the text content of the success element",
+            "selector": "CSS selector to identify the element",
+            "element_type": "ELEMENT_TYPE"
+        }}
+    ],
+    "confidence": "high/medium/low"
+}}
+
+Rules:
+- ELEMENT_TYPE can be: "message", "banner", "alert", "modal", "redirect", "other"
+- Look for elements that contain success indicators like:
+  - "thank you", "message sent", "form submitted", "we'll get back to you"
+  - "success", "submitted successfully", "received your message"
+  - CSS classes like "success", "alert-success", "message-success"
+  - Elements with green styling or checkmark icons
+- Set confidence based on how clear the success indication is:
+  - "high": Clear success message with explicit confirmation
+  - "medium": Likely success indication but somewhat ambiguous
+  - "low": Possible success indication but uncertain
+- If no success indicators are found, set success_found to false and return empty success_elements array
+- Only return the JSON object, no additional text
+
+HTML Source:
+{source}
+"""
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash", contents=prompt
+        )
+
+        # Extract JSON from response
+        response_text = response.text.strip()
+
+        # Remove any markdown code blocks if present
+        if response_text.startswith("```json"):
+            response_text = response_text[7:-3].strip()
+        elif response_text.startswith("```"):
+            response_text = response_text[3:-3].strip()
+
+        # Parse JSON response
+        success_info = json.loads(response_text)
+
+        return success_info
+
+    except Exception as e:
+        print(f"Error analyzing success message: {e}")
+        return {"success_found": False, "success_elements": [], "confidence": "low"}

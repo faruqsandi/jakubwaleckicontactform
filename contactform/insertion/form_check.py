@@ -306,3 +306,290 @@ def verify_form_elements(
         return {"errors": all_errors}
 
     return True
+
+
+def submit_form(
+    driver: WebDriver, submit_button: dict[str, str] | None
+) -> bool | dict[str, list[str]]:
+    """
+    Submit the form by clicking the submit button.
+
+    Args:
+        driver (WebDriver): The Selenium WebDriver instance.
+        submit_button (dict[str, str] | None): Dictionary containing submit button information or None.
+
+    Returns:
+        bool | dict[str, list[str]]: True if form submitted successfully, otherwise dict with error messages.
+    """
+    if not submit_button:
+        error_msg = "No submit button information provided"
+        print(f"✗ {error_msg}")
+        return {"submit_errors": [error_msg]}
+
+    submit_label = submit_button.get("label", "Submit")
+    submit_selector = submit_button.get("selector", "")
+
+    if not submit_selector:
+        error_msg = f"No selector provided for submit button '{submit_label}'"
+        print(f"✗ {error_msg}")
+        return {"submit_errors": [error_msg]}
+
+    errors: list[str] = []
+    element = None
+
+    try:
+        # Try to find the submit button using CSS selector first
+        element = driver.find_element(By.CSS_SELECTOR, submit_selector)
+        print(f"✓ Submit button '{submit_label}' found: {submit_selector}")
+    except NoSuchElementException:
+        try:
+            # If CSS selector fails, try using name attribute
+            element = driver.find_element(By.NAME, submit_selector)
+            print(f"✓ Submit button '{submit_label}' found by name: {submit_selector}")
+        except NoSuchElementException:
+            try:
+                # If name fails, try using ID
+                element = driver.find_element(By.ID, submit_selector)
+                print(f"✓ Submit button '{submit_label}' found by ID: {submit_selector}")
+            except NoSuchElementException:
+                error_msg = f"Submit button '{submit_label}' NOT FOUND with selector: {submit_selector}"
+                print(f"✗ {error_msg}")
+                errors.append(error_msg)
+                return {"submit_errors": errors}
+
+    # Try to click the submit button
+    try:
+        if element and element.is_enabled():
+            element.click()
+            print(f"✓ Form submitted successfully by clicking '{submit_label}'")
+            return True
+        else:
+            error_msg = f"Submit button '{submit_label}' is not enabled or clickable"
+            print(f"✗ {error_msg}")
+            errors.append(error_msg)
+            return {"submit_errors": errors}
+    except (NoSuchElementException, AttributeError) as e:
+        error_msg = f"Failed to click submit button '{submit_label}': {str(e)}"
+        print(f"✗ {error_msg}")
+        errors.append(error_msg)
+        return {"submit_errors": errors}
+
+
+def fill_and_submit_form(
+    driver: WebDriver,
+    form_info: dict[str, Any],
+    values: dict[str, str]
+) -> bool | dict[str, list[str]]:
+    """
+    Fill and submit a form with provided values.
+
+    Args:
+        driver (WebDriver): The Selenium WebDriver instance.
+        form_info (dict[str, Any]): Dictionary containing form information with fields and submit_button.
+        values (dict[str, str]): Dictionary mapping field types to their values.
+
+    Returns:
+        bool | dict[str, list[str]]: True if form filled and submitted successfully, otherwise dict with error messages.
+    """
+    fields = form_info.get("fields", [])
+    submit_button = form_info.get("submit_button", None)
+
+    # First, fill the form fields
+    fill_result = fill_form_fields(driver, fields, values)
+
+    if isinstance(fill_result, dict):
+        return fill_result  # Return fill errors if any
+
+    print("✓ All form fields filled successfully")
+
+    # Then submit the form
+    submit_result = submit_form(driver, submit_button)
+
+    if isinstance(submit_result, dict):
+        return submit_result  # Return submit errors if any
+
+    print("✓ Form submitted successfully")
+    return True
+
+
+def verify_success_message(
+    driver: WebDriver, success_info: dict[str, Any]
+) -> bool | dict[str, list[str]]:
+    """
+    Verify the presence of success message elements on the page.
+
+    Args:
+        driver (WebDriver): The Selenium WebDriver instance.
+        success_info (dict[str, Any]): Dictionary containing success message information from Gemini AI.
+
+    Returns:
+        bool | dict[str, list[str]]: True if success elements found as expected, otherwise dict with error messages.
+    """
+    success_found = success_info.get("success_found", False)
+    success_elements = success_info.get("success_elements", [])
+    confidence = success_info.get("confidence", "low")
+
+    print(f"\nChecking for success message (confidence: {confidence}):")
+
+    if not success_found:
+        print("✓ No success message expected and none should be found")
+        return True
+
+    errors = []
+
+    print(f"Looking for {len(success_elements)} success elements:")
+
+    for i, element_info in enumerate(success_elements):
+        element_text = element_info.get("text", "")
+        element_selector = element_info.get("selector", "")
+        element_type = element_info.get("element_type", "unknown")
+
+        if not element_selector:
+            error_msg = f"Success element {i+1} has no selector provided"
+            print(f"✗ {error_msg}")
+            errors.append(error_msg)
+            continue
+
+        # Try to find the success element
+        element_found = False
+        try:
+            # Try to find the element using CSS selector first
+            element = driver.find_element(By.CSS_SELECTOR, element_selector)
+            if element.is_displayed():
+                print(f"✓ Success {element_type} found and visible: '{element_text}' (selector: {element_selector})")
+                element_found = True
+            else:
+                print(f"⚠ Success {element_type} found but not visible: '{element_text}' (selector: {element_selector})")
+                element_found = True
+        except NoSuchElementException:
+            try:
+                # If CSS selector fails, try using ID
+                element = driver.find_element(By.ID, element_selector)
+                if element.is_displayed():
+                    print(
+                        f"✓ Success {element_type} found by ID and visible: '{element_text}' (selector: {element_selector})")
+                    element_found = True
+                else:
+                    print(
+                        f"⚠ Success {element_type} found by ID but not visible: '{element_text}' (selector: {element_selector})")
+                    element_found = True
+            except NoSuchElementException:
+                try:
+                    # Try using class name if selector looks like a class
+                    if element_selector.startswith('.'):
+                        class_name = element_selector[1:]
+                        element = driver.find_element(By.CLASS_NAME, class_name)
+                        if element.is_displayed():
+                            print(
+                                f"✓ Success {element_type} found by class and visible: '{element_text}' (selector: {element_selector})")
+                            element_found = True
+                        else:
+                            print(
+                                f"⚠ Success {element_type} found by class but not visible: '{element_text}' (selector: {element_selector})")
+                            element_found = True
+                except NoSuchElementException:
+                    # Try to find by text content as fallback
+                    try:
+                        xpath_text_selector = f"//*[contains(text(), '{element_text}')]"
+                        element = driver.find_element(By.XPATH, xpath_text_selector)
+                        if element.is_displayed():
+                            print(f"✓ Success {element_type} found by text content and visible: '{element_text}'")
+                            element_found = True
+                        else:
+                            print(f"⚠ Success {element_type} found by text content but not visible: '{element_text}'")
+                            element_found = True
+                    except NoSuchElementException:
+                        pass
+
+        if not element_found:
+            error_msg = f"Success {element_type} NOT FOUND: '{element_text}' (selector: {element_selector})"
+            print(f"✗ {error_msg}")
+            errors.append(error_msg)
+
+    if errors:
+        # Check confidence level to determine if errors are critical
+        if confidence == "high":
+            return {"success_verification_errors": errors}
+        elif confidence == "medium":
+            print(f"⚠ Some success elements not found, but confidence is only {confidence}")
+            return {"success_verification_warnings": errors}
+        else:
+            print(f"⚠ Success elements not found, but confidence is {confidence} - treating as non-critical")
+            return True
+
+    print("✓ All expected success elements found")
+    return True
+
+
+def check_success_message_after_submission(
+    driver: WebDriver, success_info: dict[str, Any]
+) -> dict[str, Any]:
+    """
+    Check for success message after form submission and return detailed results.
+
+    Args:
+        driver (WebDriver): The Selenium WebDriver instance.
+        success_info (dict[str, Any]): Dictionary containing expected success message information from Gemini AI.
+
+    Returns:
+        dict[str, Any]: Detailed results of the success message verification including status, elements found, and any issues.
+    """
+    result = {
+        "success_expected": success_info.get("success_found", False),
+        "confidence": success_info.get("confidence", "low"),
+        "elements_checked": len(success_info.get("success_elements", [])),
+        "elements_found": 0,
+        "elements_visible": 0,
+        "verification_passed": False,
+        "issues": [],
+        "found_elements": []
+    }
+
+    verification_result = verify_success_message(driver, success_info)
+
+    if verification_result is True:
+        result["verification_passed"] = True
+        result["elements_found"] = result["elements_checked"]
+        result["elements_visible"] = result["elements_checked"]
+    elif isinstance(verification_result, dict):
+        # Count successful elements by checking which ones didn't have errors
+        errors = verification_result.get("success_verification_errors", [])
+        warnings = verification_result.get("success_verification_warnings", [])
+
+        if errors:
+            result["issues"].extend(errors)
+            result["elements_found"] = max(0, result["elements_checked"] - len(errors))
+        elif warnings:
+            result["issues"].extend(warnings)
+            result["elements_found"] = max(0, result["elements_checked"] - len(warnings))
+            # For warnings (medium confidence), still consider it passed
+            if result["confidence"] == "medium":
+                result["verification_passed"] = True
+
+    # Try to get actual text content of found elements for verification
+    success_elements = success_info.get("success_elements", [])
+    for element_info in success_elements:
+        element_selector = element_info.get("selector", "")
+        element_text = element_info.get("text", "")
+
+        if element_selector:
+            try:
+                element = driver.find_element(By.CSS_SELECTOR, element_selector)
+                actual_text = element.text.strip()
+                result["found_elements"].append({
+                    "expected_text": element_text,
+                    "actual_text": actual_text,
+                    "selector": element_selector,
+                    "visible": element.is_displayed()
+                })
+                if element.is_displayed():
+                    result["elements_visible"] += 1
+            except NoSuchElementException:
+                result["found_elements"].append({
+                    "expected_text": element_text,
+                    "actual_text": None,
+                    "selector": element_selector,
+                    "visible": False
+                })
+
+    return result
