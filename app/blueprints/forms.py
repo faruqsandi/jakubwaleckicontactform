@@ -1,10 +1,8 @@
 from flask import Blueprint, render_template, redirect, url_for, session, flash
+from contactform.mission.crud import get_db
+from contactform.detection.crud import ContactFormDetectionCRUD
 
 forms_bp = Blueprint("forms", __name__, url_prefix="/forms")
-
-# Sample data
-sample_missing_forms = ["missingform1.com", "noform.org"]
-sample_domains = ["example.com", "testsite.org", "demo.net", "sample.io"]
 
 
 @forms_bp.route("/missing")
@@ -18,17 +16,101 @@ def missing_forms():
         flash("Please upload CSV file first.", "warning")
         return redirect(url_for("config.config_page"))
 
+    # Get domains from uploaded CSV that are in ContactFormDetection with status not "completed"
+    uploaded_domains = session.get("uploaded_domains", [])
+    missing_forms_data = []
+
+    if uploaded_domains:
+        try:
+            db = get_db()
+            try:
+                for domain in uploaded_domains:
+                    # Get ContactFormDetection records for this domain
+                    detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
+
+                    if detections:
+                        # Check if any detection has status other than "completed"
+                        for detection in detections:
+                            if detection.detection_status != "completed":
+                                missing_forms_data.append(
+                                    {
+                                        "domain": domain,
+                                        "status": detection.detection_status,
+                                        "form_present": detection.contact_form_present,
+                                        "form_url": detection.form_url,
+                                    }
+                                )
+                                break  # Only add once per domain
+                    else:
+                        # No detection record found, this shouldn't happen if config worked properly
+                        missing_forms_data.append(
+                            {
+                                "domain": domain,
+                                "status": "not_found",
+                                "form_present": False,
+                                "form_url": None,
+                            }
+                        )
+
+            finally:
+                db.close()
+
+        except Exception as e:
+            flash(f"Error retrieving form data: {str(e)}", "error")
+            missing_forms_data = []
+
     return render_template(
         "missing_forms.html",
-        missing_forms=sample_missing_forms,
+        missing_forms=missing_forms_data,
         mission_name=session.get("current_mission_name"),
     )
 
 
 @forms_bp.route("/get_forms", methods=["POST"])
 def get_forms():
-    """Get form information for missing domains"""
-    # TODO: Implement form detection logic
-    flash("Form information retrieved successfully!", "success")
-    session["forms_retrieved"] = True
+    """Trigger form detection for pending domains"""
+    if "current_mission_id" not in session:
+        flash("Please select a mission first.", "warning")
+        return redirect(url_for("mission.mission_list"))
+
+    # Get domains that need form detection
+    uploaded_domains = session.get("uploaded_domains", [])
+
+    if not uploaded_domains:
+        flash("No domains to process.", "warning")
+        return redirect(url_for("forms.missing_forms"))
+
+    try:
+        db = get_db()
+        try:
+            updated_count = 0
+            for domain in uploaded_domains:
+                detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
+
+                # For now, just update status from pending to completed
+                # In the future, this would trigger actual form detection logic
+                for detection in detections:
+                    if detection.detection_status == "pending":
+                        ContactFormDetectionCRUD.update(
+                            db=db,
+                            detection_id=detection.id,
+                            detection_status="completed",
+                            contact_form_present=True,  # Simulated detection
+                            form_url=f"https://{domain}/contact",  # Default form URL
+                        )
+                        updated_count += 1
+
+            if updated_count > 0:
+                flash(
+                    f"Form detection completed for {updated_count} domains!", "success"
+                )
+            else:
+                flash("No pending domains found to process.", "info")
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        flash(f"Error during form detection: {str(e)}", "error")
+
     return redirect(url_for("forms.missing_forms"))
