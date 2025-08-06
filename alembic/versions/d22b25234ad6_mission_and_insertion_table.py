@@ -6,12 +6,15 @@ Create Date: 2025-08-07 01:20:09.516149
 
 """
 
+from typing import Union
 from collections.abc import Sequence
 
 
 # revision identifiers, used by Alembic.
-revision: str = "d22b25234ad6"
-down_revision: str | Sequence[str] | None = "210b12fd65e1"
+revision: str = "d22b25234ad6"  # pragma: allowlist secret
+down_revision: str | Sequence[str] | None = (
+    "210b12fd65e1"  # pragma: allowlist secret
+)
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
