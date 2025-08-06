@@ -1,3 +1,4 @@
+from contactform.detection.selenium_handler import search_domain_form as helper_search_domain_form, batch_search_domain_forms
 from flask import Blueprint, render_template, redirect, url_for, session, flash, request
 from contactform.mission.crud import get_db
 from contactform.detection.crud import ContactFormDetectionCRUD
@@ -133,22 +134,11 @@ def search_domain_form():
     try:
         db = get_db()
         try:
-            detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
-            raise Exception(
-                "Simulated error for testing"
-            )  # Simulated error for testing
+            detections = helper_search_domain_form(domain, db)
+            # raise Exception(
+            #     "Simulated error for testing"
+            # )  # Simulated error for testing
             if detections:
-                # Update the detection status for this specific domain
-                for detection in detections:
-                    if detection.detection_status in ["pending", "failed"]:
-                        ContactFormDetectionCRUD.update(
-                            db=db,
-                            detection_id=detection.id,
-                            detection_status="completed",
-                            contact_form_present=True,  # Simulated detection
-                            form_url=f"https://{domain}/contact",  # Default form URL
-                        )
-
                 flash(f"Form detection completed for domain '{domain}'!", "success")
             else:
                 flash(f"No detection record found for domain '{domain}'.", "warning")

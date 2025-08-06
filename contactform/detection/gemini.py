@@ -13,7 +13,7 @@ def select_contact_url(client: genai.Client, url_list: list[tuple[str, str]]) ->
     prompt = """
     Analyze the following list of website links (text and URL) and identify which one most likely points to a contact page or about page.
     Consider both the link text and URL path. Return only the index number (0-based) of the best match.
-    
+    The contanct page should in the same domain.
     Links:
     """
 

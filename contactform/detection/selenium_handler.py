@@ -199,7 +199,7 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
             )
 
         # Set up webdriver
-        driver = setup_webdriver(headless=True)
+        driver = setup_webdriver(headless=False)
 
         # Step 1: Navigate to main domain
         logger.info(f"Navigating to: {domain_url}")
@@ -237,15 +237,15 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
         except Exception as e:
             logger.warning(f"Failed to select contact page using AI: {str(e)}")
             # Try to find contact page using heuristics
-            contact_keywords = ["contact", "about", "reach", "support", "team"]
+            # contact_keywords = ["contact", "about", "reach", "support", "team"]
             contact_page_url = None
 
-            for text, url in all_links:
-                text_lower = text.lower()
-                url_lower = url.lower()
-                if any(keyword in text_lower or keyword in url_lower for keyword in contact_keywords):
-                    contact_page_url = url
-                    break
+            # for text, url in all_links:
+            #     text_lower = text.lower()
+            #     url_lower = url.lower()
+            #     if any(keyword in text_lower or keyword in url_lower for keyword in contact_keywords):
+            #         contact_page_url = url
+            #         break
 
             if not contact_page_url:
                 logger.warning(f"No contact page found for {domain_name}")
