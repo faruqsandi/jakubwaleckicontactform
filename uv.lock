@@ -202,6 +202,7 @@ dependencies = [
     { name = "flask" },
     { name = "google-api-python-client" },
     { name = "google-genai" },
+    { name = "huey" },
     { name = "python-dotenv" },
     { name = "requests" },
     { name = "selenium" },
@@ -217,6 +218,7 @@ requires-dist = [
     { name = "flask", specifier = ">=3.0.0" },
     { name = "google-api-python-client", specifier = ">=2.177.0" },
     { name = "google-genai", specifier = ">=1.28.0" },
+    { name = "huey", specifier = ">=2.5.3" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "requests", specifier = ">=2.32.4" },
     { name = "selenium", specifier = ">=4.34.2" },
@@ -420,6 +422,12 @@ sdist = { url = "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad", size = 73517, upload-time = "2024-12-06T15:37:21.509Z" },
 ]
+
+[[package]]
+name = "huey"
+version = "2.5.3"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/86/8c/2dfecf3705f5e522097b4e9fb6fb38e627a0340f8362cc05bd7a845e4279/huey-2.5.3.tar.gz", hash = "sha256:089fc72b97fd26a513f15b09925c56fad6abe4a699a1f0e902170b37e85163c7", size = 836918, upload-time = "2025-03-19T14:46:51.614Z" }
 
 [[package]]
 name = "idna"

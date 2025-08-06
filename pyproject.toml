@@ -12,6 +12,7 @@ dependencies = [
     "flask>=3.0.0",
     "google-api-python-client>=2.177.0",
     "google-genai>=1.28.0",
+    "huey>=2.5.3",
     "python-dotenv>=1.1.1",
     "requests>=2.32.4",
     "selenium>=4.34.2",
