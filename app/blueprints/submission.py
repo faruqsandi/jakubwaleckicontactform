@@ -12,12 +12,42 @@ submission_bp = Blueprint("submission", __name__, url_prefix="/submission")
 sample_domains = ["example.com", "testsite.org", "demo.net", "sample.io"]
 
 
+def _check_mission_submitted():
+    """
+    Check if current mission is already submitted and redirect if needed.
+    Returns redirect response if mission is submitted, None otherwise.
+    """
+    if "current_mission_id" not in session:
+        return None
+
+    db = get_db()
+    try:
+        mission_id = session["current_mission_id"]
+        mission = MissionCRUD.get_mission(mission_id, db)
+
+        if mission and mission.submitted_date is not None:
+            flash(
+                "This mission has already been submitted. Redirecting to submission process.",
+                "info",
+            )
+            return redirect(url_for("submission.submission_process"))
+    finally:
+        db.close()
+
+    return None
+
+
 @submission_bp.route("/config")
 def submission_config() -> Response | str:
     """Fourth page: Submission config page"""
     if "current_mission_id" not in session:
         flash("Please select a mission first.", "warning")
         return redirect(url_for("mission.mission_list"))
+
+    # Check if mission is already submitted
+    submitted_redirect = _check_mission_submitted()
+    if submitted_redirect:
+        return submitted_redirect
 
     # Get domains from session
     uploaded_domains = session.get("uploaded_domains", [])
@@ -128,6 +158,11 @@ def save_submission_config():
     if "current_mission_id" not in session:
         flash("Please select a mission first.", "warning")
         return redirect(url_for("mission.mission_list"))
+
+    # Check if mission is already submitted
+    submitted_redirect = _check_mission_submitted()
+    if submitted_redirect:
+        return submitted_redirect
 
     # Get the mission ID from session
     mission_id = session["current_mission_id"]

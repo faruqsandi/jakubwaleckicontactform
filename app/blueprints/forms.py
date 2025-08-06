@@ -2,10 +2,35 @@ from contactform.detection.selenium_handler import (
     search_domain_form as helper_search_domain_form,
 )
 from flask import Blueprint, render_template, redirect, url_for, session, flash, request
-from contactform.mission.crud import get_db
+from contactform.mission.crud import get_db, MissionCRUD
 from contactform.detection.crud import ContactFormDetectionCRUD
 
 forms_bp = Blueprint("forms", __name__, url_prefix="/forms")
+
+
+def _check_mission_submitted():
+    """
+    Check if current mission is already submitted and redirect if needed.
+    Returns redirect response if mission is submitted, None otherwise.
+    """
+    if "current_mission_id" not in session:
+        return None
+
+    db = get_db()
+    try:
+        mission_id = session["current_mission_id"]
+        mission = MissionCRUD.get_mission(mission_id, db)
+
+        if mission and mission.submitted_date is not None:
+            flash(
+                "This mission has already been submitted. Redirecting to submission process.",
+                "info",
+            )
+            return redirect(url_for("submission.submission_process"))
+    finally:
+        db.close()
+
+    return None
 
 
 @forms_bp.route("/missing")
@@ -14,6 +39,11 @@ def missing_forms():
     if "current_mission_id" not in session:
         flash("Please select a mission first.", "warning")
         return redirect(url_for("mission.mission_list"))
+
+    # Check if mission is already submitted
+    submitted_redirect = _check_mission_submitted()
+    if submitted_redirect:
+        return submitted_redirect
 
     if not session.get("csv_uploaded"):
         flash("Please upload CSV file first.", "warning")

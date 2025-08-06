@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from contactform.mission import get_all_missions, create_mission, get_mission
+from contactform.mission import get_all_missions, create_mission
+from contactform.mission.crud import MissionCRUD, get_db
 
 mission_bp = Blueprint("mission", __name__, url_prefix="/mission")
 
@@ -85,17 +86,33 @@ def create_mission_route():
 def select_mission(mission_id: int):
     """Select a mission and store in session"""
     try:
-        mission = get_mission(mission_id)
-        if mission:
-            session["current_mission_id"] = mission_id
-            mission_name = mission.pre_defined_fields.get(
-                "name", f"Mission {mission.id}"
-            )
-            session["current_mission_name"] = mission_name
-            flash(f'Mission "{mission_name}" selected!', "info")
-        else:
-            flash("Mission not found!", "error")
-            return redirect(url_for("mission.mission_list"))
+        # Get mission from database
+        db = get_db()
+        try:
+            mission = MissionCRUD.get_mission(mission_id, db)
+
+            if mission:
+                session["current_mission_id"] = mission_id
+                mission_name = mission.pre_defined_fields.get(
+                    "name", f"Mission {mission.id}"
+                )
+                session["current_mission_name"] = mission_name
+                flash(f'Mission "{mission_name}" selected!', "info")
+
+                # Check if mission is already submitted
+                if mission.submitted_date is not None:
+                    flash(
+                        "This mission has already been submitted. Redirecting to submission process.",
+                        "info",
+                    )
+                    return redirect(url_for("submission.submission_process"))
+
+            else:
+                flash("Mission not found!", "error")
+                return redirect(url_for("mission.mission_list"))
+        finally:
+            db.close()
+
     except Exception as e:
         flash(f"Error selecting mission: {str(e)}", "error")
         return redirect(url_for("mission.mission_list"))

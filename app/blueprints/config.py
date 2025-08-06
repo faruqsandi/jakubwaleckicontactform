@@ -2,10 +2,35 @@ import csv
 import io
 from urllib.parse import urlparse
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from contactform.mission.crud import get_db
+from contactform.mission.crud import get_db, MissionCRUD
 from contactform.detection.crud import ContactFormDetectionCRUD
 
 config_bp = Blueprint("config", __name__, url_prefix="/config")
+
+
+def _check_mission_submitted():
+    """
+    Check if current mission is already submitted and redirect if needed.
+    Returns redirect response if mission is submitted, None otherwise.
+    """
+    if "current_mission_id" not in session:
+        return None
+
+    db = get_db()
+    try:
+        mission_id = session["current_mission_id"]
+        mission = MissionCRUD.get_mission(mission_id, db)
+
+        if mission and mission.submitted_date is not None:
+            flash(
+                "This mission has already been submitted. Redirecting to submission process.",
+                "info",
+            )
+            return redirect(url_for("submission.submission_process"))
+    finally:
+        db.close()
+
+    return None
 
 
 def extract_fqdn(domain: str) -> tuple[str, bool]:
@@ -42,6 +67,12 @@ def config_page():
     if "current_mission_id" not in session:
         flash("Please select a mission first.", "warning")
         return redirect(url_for("mission.mission_list"))
+
+    # Check if mission is already submitted
+    submitted_redirect = _check_mission_submitted()
+    if submitted_redirect:
+        return submitted_redirect
+
     return render_template(
         "config.html", mission_name=session.get("current_mission_name")
     )
