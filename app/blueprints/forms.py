@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, session, flash
+from flask import Blueprint, render_template, redirect, url_for, session, flash, request
 from contactform.mission.crud import get_db
 from contactform.detection.crud import ContactFormDetectionCRUD
 
@@ -38,6 +38,7 @@ def missing_forms():
                                         "status": detection.detection_status,
                                         "form_present": detection.contact_form_present,
                                         "form_url": detection.form_url,
+                                        "last_updated": detection.last_updated,
                                     }
                                 )
                                 break  # Only add once per domain
@@ -49,6 +50,7 @@ def missing_forms():
                                 "status": "not_found",
                                 "form_present": False,
                                 "form_url": None,
+                                "last_updated": None,
                             }
                         )
 
@@ -112,5 +114,37 @@ def get_forms():
 
     except Exception as e:
         flash(f"Error during form detection: {str(e)}", "error")
+
+    return redirect(url_for("forms.missing_forms"))
+
+
+@forms_bp.route("/remove_domain", methods=["POST"])
+def remove_domain():
+    """Remove a domain from the current mission's uploaded domains"""
+    if "current_mission_id" not in session:
+        flash("Please select a mission first.", "warning")
+        return redirect(url_for("mission.mission_list"))
+
+    domain_to_remove = request.form.get("domain")
+    if not domain_to_remove:
+        flash("No domain specified for removal.", "error")
+        return redirect(url_for("forms.missing_forms"))
+
+    # Get current uploaded domains from session
+    uploaded_domains = session.get("uploaded_domains", [])
+
+    if domain_to_remove in uploaded_domains:
+        # Remove the domain from the session list
+        uploaded_domains.remove(domain_to_remove)
+        session["uploaded_domains"] = uploaded_domains
+        flash(
+            f"Domain '{domain_to_remove}' has been removed from this mission.",
+            "success",
+        )
+    else:
+        flash(
+            f"Domain '{domain_to_remove}' was not found in the current mission.",
+            "warning",
+        )
 
     return redirect(url_for("forms.missing_forms"))
