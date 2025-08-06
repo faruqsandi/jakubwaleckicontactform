@@ -15,6 +15,7 @@ from .crud import (
 )
 
 from .gemini import get_form_information, select_contact_url, find_success_message
+from .selenium_handler import search_domain_form, batch_search_domain_forms
 
 __all__ = [
     "ContactFormDetection",
@@ -26,4 +27,6 @@ __all__ = [
     "get_form_information",
     "select_contact_url",
     "find_success_message",
+    "search_domain_form",
+    "batch_search_domain_forms",
 ]

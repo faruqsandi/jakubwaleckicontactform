@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from contactform.database import Base, Mission
+from contactform.database import Base
+from contactform.mission.models import Mission
 import os
 
 # Database setup
