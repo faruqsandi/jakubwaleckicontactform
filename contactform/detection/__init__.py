@@ -14,6 +14,7 @@ from .crud import (
     delete_detection,
 )
 
+from .gemini import get_form_information, select_contact_url
 __all__ = [
     "ContactFormDetection",
     "ContactFormDetectionCRUD",
@@ -21,4 +22,6 @@ __all__ = [
     "get_detection",
     "update_detection",
     "delete_detection",
+    "get_form_information",
+    "select_contact_url",
 ]

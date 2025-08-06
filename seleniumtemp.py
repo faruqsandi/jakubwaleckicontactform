@@ -2,8 +2,12 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import chromedriver_autoinstaller
-from contactform.gpt import select_contact_url, gemini_client, get_form_information
-from contactform.insertion.form_check import get_all_links_from_source, verify_form_elements
+from contactform.detection import get_form_information, select_contact_url
+from contactform.gpt import gemini_client
+
+
+from contactform.gpt import select_contact_url, get_form_information
+from contactform.insertion.form_check import get_all_links_from_source, verify_form_elements, fill_form_fields
 
 chromedriver_autoinstaller.install()
 options = Options()
@@ -32,6 +36,15 @@ form_info = get_form_information(gemini_client, contact_page_source)
 # Verify form elements using the helper function
 verify_form_elements(driver, form_info)
 
+values = {
+    "name": "John Doe",
+    "email": "john@example.com",
+    "address": "123 Main St, City, State",
+    "message": "Hello, this is my message"
+}
+
+fields = form_info['fields']
+result = fill_form_fields(driver, fields, values)
 
 # Close the browser
 driver.quit()
