@@ -2,8 +2,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import chromedriver_autoinstaller
-from gpt import select_contact_url, gemini_client, get_form_information
-from helper import get_all_links_from_source, verify_form_elements
+from contactform.gpt import select_contact_url, gemini_client, get_form_information
+from contactform.helper import get_all_links_from_source, verify_form_elements
 
 chromedriver_autoinstaller.install()
 options = Options()
@@ -27,6 +27,7 @@ contact_page_source = driver.page_source
 
 
 form_info = get_form_information(gemini_client, contact_page_source)
+
 
 # Verify form elements using the helper function
 verify_form_elements(driver, form_info)
