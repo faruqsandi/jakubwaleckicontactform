@@ -2,7 +2,10 @@ from datetime import datetime, timezone
 from sqlalchemy import String, Text, DateTime, JSON, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from contactform.database.models import Base
-from contactform.mission.models import Mission
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from contactform.mission.models import Mission
 
 
 class FormSubmission(Base):
@@ -50,7 +53,7 @@ class FormSubmission(Base):
     response_data: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationship to mission
-    mission: Mapped[Mission] = relationship(
+    mission: Mapped["Mission"] = relationship(
         "Mission", back_populates="form_submissions"
     )
 
