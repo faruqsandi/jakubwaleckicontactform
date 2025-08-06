@@ -5,7 +5,7 @@ This module provides functionality to detect contact forms on websites using Sel
 and update the ContactFormDetection database with the results.
 """
 
-from typing import Optional, Dict, Any
+from typing import Any
 from urllib.parse import urljoin, urlparse
 import logging
 

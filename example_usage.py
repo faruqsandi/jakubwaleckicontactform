@@ -12,7 +12,6 @@ from contactform.detection.selenium_handler import (
 from contactform.detection.models import ContactFormDetection
 from contactform.mission.crud import get_db
 import logging
-from typing import Optional
 
 # Set up logging to see what happens
 logging.basicConfig(level=logging.INFO)

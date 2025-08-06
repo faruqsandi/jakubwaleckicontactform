@@ -126,13 +126,15 @@
             <div class="modal-body">
                 <h6>Data that will be submitted:</h6>
                 <div class="bg-light p-3 rounded">
+                    {% if predefined_values %}
                     <ul class="mb-0">
-                        <li><strong>Name:</strong> {{ session.get('field_name', 'Not set') }}</li>
-                        <li><strong>Email:</strong> {{ session.get('field_email', 'Not set') }}</li>
-                        <li><strong>Phone:</strong> {{ session.get('field_phone', 'Not set') }}</li>
-                        <li><strong>Message:</strong> {{ session.get('field_message', 'Not set') }}</li>
-                        <li><strong>Company:</strong> {{ session.get('field_company', 'Not set') }}</li>
+                        {% for field_name, field_value in predefined_values.items() %}
+                        <li><strong>{{ field_name.replace('_', ' ').title() }}:</strong> {{ field_value }}</li>
+                        {% endfor %}
                     </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">No predefined values set for this mission.</p>
+                    {% endif %}
                 </div>
                 <small class="text-muted mt-2 d-block">
                     This data will be submitted to all {{ domains|length }} domains.

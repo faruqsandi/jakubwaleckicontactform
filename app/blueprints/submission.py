@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from werkzeug import Response
 from contactform.detection.crud import ContactFormDetectionCRUD
 from contactform.mission.crud import MissionCRUD, get_db
-from typing import Dict, List, Set, Any
+from typing import Any
 
 submission_bp = Blueprint("submission", __name__, url_prefix="/submission")
 
@@ -219,10 +219,26 @@ def submission_process():
     # Use uploaded domains if available, otherwise use sample data
     domains = session.get("uploaded_domains", sample_domains)
 
+    # Get mission data to display predefined values
+    db = get_db()
+    try:
+        mission_id = session["current_mission_id"]
+        mission = MissionCRUD.get_mission(mission_id, db)
+
+        if not mission:
+            flash("Mission not found.", "error")
+            return redirect(url_for("mission.mission_list"))
+
+        predefined_values = mission.pre_defined_fields or {}
+
+    finally:
+        db.close()
+
     return render_template(
         "submission_process.html",
         domains=domains,
         mission_name=session.get("current_mission_name"),
+        predefined_values=predefined_values,
     )
 
 
