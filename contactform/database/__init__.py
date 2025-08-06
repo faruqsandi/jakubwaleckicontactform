@@ -1,3 +1,3 @@
-from .models import Base, ContactFormDetection
+from .models import Base
 
-__all__ = ["Base", "ContactFormDetection"]
+__all__ = ["Base"]
