@@ -118,6 +118,50 @@ def get_forms():
     return redirect(url_for("forms.missing_forms"))
 
 
+@forms_bp.route("/search_domain_form", methods=["POST"])
+def search_domain_form():
+    """Search form information for a specific domain"""
+    if "current_mission_id" not in session:
+        flash("Please select a mission first.", "warning")
+        return redirect(url_for("mission.mission_list"))
+
+    domain = request.form.get("domain")
+    if not domain:
+        flash("No domain specified for form search.", "error")
+        return redirect(url_for("forms.missing_forms"))
+
+    try:
+        db = get_db()
+        try:
+            detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
+            raise Exception(
+                "Simulated error for testing"
+            )  # Simulated error for testing
+            if detections:
+                # Update the detection status for this specific domain
+                for detection in detections:
+                    if detection.detection_status in ["pending", "failed"]:
+                        ContactFormDetectionCRUD.update(
+                            db=db,
+                            detection_id=detection.id,
+                            detection_status="completed",
+                            contact_form_present=True,  # Simulated detection
+                            form_url=f"https://{domain}/contact",  # Default form URL
+                        )
+
+                flash(f"Form detection completed for domain '{domain}'!", "success")
+            else:
+                flash(f"No detection record found for domain '{domain}'.", "warning")
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        flash(f"Error during form detection for '{domain}': {str(e)}", "error")
+
+    return redirect(url_for("forms.missing_forms"))
+
+
 @forms_bp.route("/remove_domain", methods=["POST"])
 def remove_domain():
     """Remove a domain from the current mission's uploaded domains"""

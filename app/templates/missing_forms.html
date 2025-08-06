@@ -96,6 +96,13 @@
                                     {% endif %}
                                 </td>
                                 <td>
+                                    <form method="POST" action="{{ url_for('forms.search_domain_form') }}"
+                                        style="display: inline;" class="me-2">
+                                        <input type="hidden" name="domain" value="{{ item.domain }}">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-search"></i>
+                                        </button>
+                                    </form>
                                     <form method="POST" action="{{ url_for('forms.remove_domain') }}"
                                         style="display: inline;">
                                         <input type="hidden" name="domain" value="{{ item.domain }}">
@@ -114,7 +121,7 @@
                 <div class="mt-3">
                     <form method="POST" action="{{ url_for('forms.get_forms') }}">
                         <button type="submit" class="btn btn-warning">
-                            <i class="bi bi-search"></i> Get Form Information
+                            <i class="bi bi-search"></i> Get all form information
                         </button>
                     </form>
                 </div>
