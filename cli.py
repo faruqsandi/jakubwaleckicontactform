@@ -33,7 +33,11 @@ def cli():
 
 
 @cli.command()
-@click.option("--message", "-m", required=True, help="Message describing the migration")
+@click.option(
+    "--message", "-m",
+    required=True,
+    help="Message describing the migration"
+)
 def migrate(message):
     """Create a new migration with auto-generated changes.
 

@@ -7,6 +7,10 @@ from alembic import context
 
 # Import our database models
 from contactform.database import Base
+# Import all models to ensure they're registered with SQLAlchemy
+from contactform.detection.models import ContactFormDetection
+from contactform.mission.models import Mission
+from contactform.insertion.models import FormSubmission
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
