@@ -25,7 +25,7 @@ class ContactFormDetection(Base):
 
     # Anti-bot detection on website level
     website_antibot_detection: Mapped[bool] = mapped_column(Boolean, default=False)
-    website_antibot_details: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # website_antibot_details: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Form URL and presence
     form_url: Mapped[str] = mapped_column(Text, nullable=False)
@@ -35,8 +35,8 @@ class ContactFormDetection(Base):
     form_antibot_detection: Mapped[bool] = mapped_column(Boolean, default=False)
     form_antibot_type: Mapped[str | None] = mapped_column(
         String(100), nullable=True
-    )  # e.g., "recaptcha", "hcaptcha", "cloudflare"
-    form_antibot_details: Mapped[str | None] = mapped_column(Text, nullable=True)
+    )  # e.g., "recaptcha", "hcaptcha", "cloudflare",
+    # form_antibot_details: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Form fields information
     form_fields: Mapped[list[str] | None] = mapped_column(
@@ -61,23 +61,23 @@ class ContactFormDetection(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
-    form_method: Mapped[str | None] = mapped_column(
-        String(10), nullable=True
-    )  # "GET" or "POST"
+    # form_method: Mapped[str | None] = mapped_column(
+    #     String(10), nullable=True
+    # )  # "GET" or "POST"
     form_action: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )  # Form action URL
 
-    # Detection confidence and status
-    detection_confidence: Mapped[float | None] = mapped_column(
-        nullable=True
-    )  # 0.0 to 1.0
+    # # Detection confidence and status
+    # detection_confidence: Mapped[float | None] = mapped_column(
+    #     nullable=True
+    # )  # 0.0 to 1.0
     detection_status: Mapped[str] = mapped_column(
         String(50), default="pending"
     )  # "pending", "completed", "failed"
 
-    # Error information
-    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # # Error information
+    # error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     def __repr__(self) -> str:
         return f"<ContactFormDetection(id={self.id}, domain='{self.domain_name}', form_present={self.contact_form_present})>"
