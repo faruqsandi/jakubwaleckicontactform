@@ -13,51 +13,52 @@
         </div>
 
         {% if missions %}
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Available Missions</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Mission Name</th>
-                                    <th>Created Date</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for mission in missions %}
-                                <tr>
-                                    <td>
-                                        <strong>{{ mission.name }}</strong>
-                                    </td>
-                                    <td>{{ mission.created_date }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ 'success' if mission.status == 'Active' else 'secondary' }}">
-                                            {{ mission.status }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <a href="{{ url_for('select_mission', mission_id=mission.id) }}" 
-                                           class="btn btn-primary btn-sm">
-                                            <i class="bi bi-arrow-right"></i> Select & Continue
-                                        </a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Available Missions</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mission Name</th>
+                                <th>Created Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mission in missions %}
+                            <tr>
+                                <td>
+                                    <strong>{{ mission.name }}</strong>
+                                </td>
+                                <td>{{ mission.created_date }}</td>
+                                <td>
+                                    <span
+                                        class="badge bg-{{ 'success' if mission.status == 'Active' else 'secondary' }}">
+                                        {{ mission.status }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('select_mission', mission_id=mission.id) }}"
+                                        class="btn btn-primary btn-sm">
+                                        <i class="bi bi-arrow-right"></i> Select & Continue
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        </div>
         {% else %}
-            <div class="alert alert-info text-center">
-                <i class="bi bi-info-circle"></i> 
-                No missions found. Create your first mission to get started!
-            </div>
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i>
+            No missions found. Create your first mission to get started!
+        </div>
         {% endif %}
 
         <div class="mt-4">

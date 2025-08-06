@@ -31,10 +31,12 @@ sample_fields = [
     {'name': 'company', 'type': 'text', 'required': False},
 ]
 
+
 @app.route('/')
 def mission_list():
     """First page: Show list of missions"""
     return render_template('mission_list.html', missions=sample_missions)
+
 
 @app.route('/create_mission', methods=['GET', 'POST'])
 def create_mission():
@@ -46,6 +48,7 @@ def create_mission():
         return redirect(url_for('mission_list'))
     return render_template('create_mission.html')
 
+
 @app.route('/mission/<int:mission_id>')
 def select_mission(mission_id):
     """Select a mission and store in session"""
@@ -56,6 +59,7 @@ def select_mission(mission_id):
         flash(f'Mission "{mission["name"]}" selected!', 'info')
     return redirect(url_for('config_page'))
 
+
 @app.route('/config')
 def config_page():
     """Second page: Config page with CSV upload"""
@@ -64,22 +68,36 @@ def config_page():
         return redirect(url_for('mission_list'))
     return render_template('config.html', mission_name=session.get('current_mission_name'))
 
+
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv():
     """Handle CSV upload"""
     if 'csv_file' not in request.files:
         flash('No file selected!', 'error')
         return redirect(url_for('config_page'))
-    
+
     file = request.files['csv_file']
     if file.filename == '':
         flash('No file selected!', 'error')
         return redirect(url_for('config_page'))
-    
+
     # TODO: Process CSV file and extract URLs
-    flash('CSV uploaded successfully!', 'success')
+    # For now, simulate processing with sample domains
+    uploaded_domains = [
+        'example.com',
+        'testsite.org',
+        'demo.net',
+        'sample.io',
+        'contact-form.com',
+        'business-site.net'
+    ]
+
+    session['uploaded_domains'] = uploaded_domains
+    session['csv_filename'] = file.filename
+    flash(f'CSV uploaded successfully! Found {len(uploaded_domains)} domains.', 'success')
     session['csv_uploaded'] = True
-    return redirect(url_for('missing_forms'))
+    return redirect(url_for('config_page'))
+
 
 @app.route('/missing_forms')
 def missing_forms():
@@ -87,14 +105,15 @@ def missing_forms():
     if 'current_mission_id' not in session:
         flash('Please select a mission first.', 'warning')
         return redirect(url_for('mission_list'))
-    
+
     if not session.get('csv_uploaded'):
         flash('Please upload CSV file first.', 'warning')
         return redirect(url_for('config_page'))
-    
-    return render_template('missing_forms.html', 
-                         missing_forms=sample_missing_forms,
-                         mission_name=session.get('current_mission_name'))
+
+    return render_template('missing_forms.html',
+                           missing_forms=sample_missing_forms,
+                           mission_name=session.get('current_mission_name'))
+
 
 @app.route('/get_forms', methods=['POST'])
 def get_forms():
@@ -104,16 +123,18 @@ def get_forms():
     session['forms_retrieved'] = True
     return redirect(url_for('missing_forms'))
 
+
 @app.route('/submission_config')
 def submission_config():
     """Fourth page: Submission config page"""
     if 'current_mission_id' not in session:
         flash('Please select a mission first.', 'warning')
         return redirect(url_for('mission_list'))
-    
-    return render_template('submission_config.html', 
-                         fields=sample_fields,
-                         mission_name=session.get('current_mission_name'))
+
+    return render_template('submission_config.html',
+                           fields=sample_fields,
+                           mission_name=session.get('current_mission_name'))
+
 
 @app.route('/save_submission_config', methods=['POST'])
 def save_submission_config():
@@ -122,9 +143,10 @@ def save_submission_config():
     for field in sample_fields:
         field_value = request.form.get(field['name'])
         session[f'field_{field["name"]}'] = field_value
-    
+
     flash('Submission configuration saved!', 'success')
     return redirect(url_for('submission_process'))
+
 
 @app.route('/submission_process')
 def submission_process():
@@ -132,10 +154,14 @@ def submission_process():
     if 'current_mission_id' not in session:
         flash('Please select a mission first.', 'warning')
         return redirect(url_for('mission_list'))
-    
-    return render_template('submission_process.html', 
-                         domains=sample_domains,
-                         mission_name=session.get('current_mission_name'))
+
+    # Use uploaded domains if available, otherwise use sample data
+    domains = session.get('uploaded_domains', sample_domains)
+
+    return render_template('submission_process.html',
+                           domains=domains,
+                           mission_name=session.get('current_mission_name'))
+
 
 @app.route('/submit_forms', methods=['POST'])
 def submit_forms():
@@ -144,12 +170,24 @@ def submit_forms():
     flash('Forms submitted successfully to all domains!', 'success')
     return redirect(url_for('submission_process'))
 
+
 @app.route('/reset_session')
 def reset_session():
     """Reset session and go back to mission list"""
     session.clear()
     flash('Session reset. Please start over.', 'info')
     return redirect(url_for('mission_list'))
+
+
+@app.route('/clear_csv')
+def clear_csv():
+    """Clear uploaded CSV data"""
+    session.pop('uploaded_domains', None)
+    session.pop('csv_filename', None)
+    session.pop('csv_uploaded', None)
+    flash('CSV data cleared.', 'info')
+    return redirect(url_for('config_page'))
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

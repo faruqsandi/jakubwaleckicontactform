@@ -13,7 +13,8 @@
         <!-- Progress indicator -->
         <div class="mb-4">
             <div class="progress">
-                <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar bg-success" role="progressbar" style="width: 25%" aria-valuenow="25"
+                    aria-valuemin="0" aria-valuemax="100">
                     Step 2 of 5
                 </div>
             </div>
@@ -24,16 +25,46 @@
                 <h5><i class="bi bi-upload"></i> CSV File Upload</h5>
             </div>
             <div class="card-body">
+                {% if session.get('csv_uploaded') and session.get('uploaded_domains') %}
+                <!-- Show existing uploaded domains -->
+                <div class="alert alert-success">
+                    <h6><i class="bi bi-check-circle"></i> CSV Already Uploaded</h6>
+                    <p class="mb-2">File: <strong>{{ session.get('csv_filename', 'Unknown') }}</strong></p>
+                    <p class="mb-0">Found <strong>{{ session.get('uploaded_domains')|length }}</strong> domains</p>
+                </div>
+
+                <div class="card bg-light mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6><i class="bi bi-list"></i> Uploaded Domains</h6>
+                        <a href="{{ url_for('clear_csv') }}" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-trash"></i> Clear CSV
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for domain in session.get('uploaded_domains') %}
+                            <div class="col-md-6 col-lg-4 mb-2">
+                                <span class="badge bg-primary">
+                                    <i class="bi bi-globe"></i> {{ domain }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <h6>Upload New CSV (will replace current domains)</h6>
+                {% endif %}
+
                 <form method="POST" action="{{ url_for('upload_csv') }}" enctype="multipart/form-data">
                     <div class="mb-3">
                         <label for="csv_file" class="form-label">Select CSV File</label>
-                        <input type="file" class="form-control" id="csv_file" name="csv_file" 
-                               accept=".csv" required>
+                        <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
                         <div class="form-text">
                             Upload a CSV file where each line contains a web URL for form submission
                         </div>
                     </div>
-                    
+
                     <div class="alert alert-info">
                         <h6><i class="bi bi-info-circle"></i> CSV Format Requirements:</h6>
                         <ul class="mb-0">
@@ -48,19 +79,31 @@
                             <i class="bi bi-arrow-left"></i> Back to Missions
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-upload"></i> Upload CSV & Continue
+                            <i class="bi bi-upload"></i> {% if session.get('csv_uploaded') %}Replace CSV{% else %}Upload
+                            CSV{% endif %} & Continue
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
+        {% if session.get('csv_uploaded') %}
+        <!-- Next step button -->
+        <div class="mt-3">
+            <div class="d-flex justify-content-end">
+                <a href="{{ url_for('missing_forms') }}" class="btn btn-success">
+                    <i class="bi bi-arrow-right"></i> Continue to Missing Forms
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="mt-4">
             <div class="card bg-light">
                 <div class="card-body">
                     <h6><i class="bi bi-question-circle"></i> What happens next?</h6>
                     <p class="mb-0">
-                        After uploading the CSV, we'll analyze each URL to detect contact forms. 
+                        After uploading the CSV, we'll analyze each URL to detect contact forms.
                         You'll then be able to review and configure the form submission process.
                     </p>
                 </div>
