@@ -2,7 +2,6 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from werkzeug import Response
 from contactform.detection.crud import ContactFormDetectionCRUD
 from contactform.mission.crud import MissionCRUD, get_db
-from sqlalchemy.orm import Session
 from typing import Dict, List, Set, Any
 
 submission_bp = Blueprint("submission", __name__, url_prefix="/submission")
@@ -30,11 +29,13 @@ def submission_config() -> Response | str:
 
     try:
         # Get all ContactFormDetection records for domains in session with completed status
-        all_form_fields: Set[str] = set()
+        all_form_fields: set[str] = set()
 
         for domain in uploaded_domains:
             detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
-            completed_detections = [d for d in detections if d.detection_status == "completed"]
+            completed_detections = [
+                d for d in detections if d.detection_status == "completed"
+            ]
 
             for detection in completed_detections:
                 if detection.form_fields:
@@ -43,7 +44,10 @@ def submission_config() -> Response | str:
 
         # If no fields found, show message and redirect
         if not all_form_fields:
-            flash("No form fields found for the selected domains. Please ensure form detection is completed.", "warning")
+            flash(
+                "No form fields found for the selected domains. Please ensure form detection is completed.",
+                "warning",
+            )
             return redirect(url_for("forms.missing_forms"))
 
         # Get existing mission data to pre-fill form
@@ -54,21 +58,29 @@ def submission_config() -> Response | str:
             flash("Mission not found.", "error")
             return redirect(url_for("mission.mission_list"))
 
-        existing_values = existing_mission.pre_defined_fields if existing_mission.pre_defined_fields else {}
+        existing_values = (
+            existing_mission.pre_defined_fields
+            if existing_mission.pre_defined_fields
+            else {}
+        )
 
         # Convert set to list of dictionaries for the template
         # Create a more sophisticated field mapping based on field names
-        dynamic_fields: List[Dict[str, Any]] = []
+        dynamic_fields: list[dict[str, Any]] = []
         for field_name in sorted(all_form_fields):
             field_type = _determine_field_type(field_name)
             is_required = _determine_if_required(field_name)
 
-            dynamic_fields.append({
-                "name": field_name,
-                "type": field_type,
-                "required": is_required,
-                "value": existing_values.get(field_name, "")  # Pre-fill with existing value
-            })
+            dynamic_fields.append(
+                {
+                    "name": field_name,
+                    "type": field_type,
+                    "required": is_required,
+                    "value": existing_values.get(
+                        field_name, ""
+                    ),  # Pre-fill with existing value
+                }
+            )
 
         return render_template(
             "submission_config.html",
@@ -88,7 +100,11 @@ def _determine_field_type(field_name: str) -> str:
         return "email"
     elif "phone" in field_name_lower or "tel" in field_name_lower:
         return "tel"
-    elif "message" in field_name_lower or "comment" in field_name_lower or "description" in field_name_lower:
+    elif (
+        "message" in field_name_lower
+        or "comment" in field_name_lower
+        or "description" in field_name_lower
+    ):
         return "textarea"
     else:
         return "text"
@@ -126,11 +142,13 @@ def save_submission_config():
             return redirect(url_for("config.config_page"))
 
         # Get all unique form fields from completed detections
-        all_form_fields: Set[str] = set()
+        all_form_fields: set[str] = set()
 
         for domain in uploaded_domains:
             detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
-            completed_detections = [d for d in detections if d.detection_status == "completed"]
+            completed_detections = [
+                d for d in detections if d.detection_status == "completed"
+            ]
 
             for detection in completed_detections:
                 if detection.form_fields:
@@ -138,12 +156,15 @@ def save_submission_config():
 
         # Validate that we have form fields to work with
         if not all_form_fields:
-            flash("No form fields found for the selected domains. Please ensure form detection is completed.", "warning")
+            flash(
+                "No form fields found for the selected domains. Please ensure form detection is completed.",
+                "warning",
+            )
             return redirect(url_for("forms.missing_forms"))
 
         # Collect form values into pre_defined_fields dictionary
-        pre_defined_fields: Dict[str, str] = {}
-        missing_required_fields: List[str] = []
+        pre_defined_fields: dict[str, str] = {}
+        missing_required_fields: list[str] = []
 
         for field_name in all_form_fields:
             field_value = request.form.get(field_name)
@@ -156,7 +177,10 @@ def save_submission_config():
 
         # Validate required fields are filled
         if missing_required_fields:
-            flash(f"Please fill in all required fields: {', '.join(missing_required_fields)}", "error")
+            flash(
+                f"Please fill in all required fields: {', '.join(missing_required_fields)}",
+                "error",
+            )
             return redirect(url_for("submission.submission_config"))
 
         # Ensure we have at least some data to save
@@ -166,9 +190,7 @@ def save_submission_config():
 
         # Update the mission with the pre-defined fields
         mission = MissionCRUD.update_mission(
-            mission_id=mission_id,
-            pre_defined_fields=pre_defined_fields,
-            db=db
+            mission_id=mission_id, pre_defined_fields=pre_defined_fields, db=db
         )
         if mission:
             flash("Submission configuration saved successfully!", "success")

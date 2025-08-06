@@ -65,23 +65,31 @@ def test_form_data_structure():
 
     # Simulate what the function would create
     test_fields = ["name", "email", "phone", "message", "company"]
-    existing_values = {"name": "John Doe", "email": "john@example.com", "message": "Test message"}
+    existing_values = {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "message": "Test message",
+    }
 
     dynamic_fields = []
     for field_name in sorted(test_fields):
         field_type = _determine_field_type(field_name)
         is_required = _determine_if_required(field_name)
 
-        dynamic_fields.append({
-            "name": field_name,
-            "type": field_type,
-            "required": is_required,
-            "value": existing_values.get(field_name, "")
-        })
+        dynamic_fields.append(
+            {
+                "name": field_name,
+                "type": field_type,
+                "required": is_required,
+                "value": existing_values.get(field_name, ""),
+            }
+        )
 
     # Verify the structure
     assert len(dynamic_fields) == 5
-    assert dynamic_fields[1]["name"] == "email"  # Should be sorted: company, email, message, name, phone
+    assert (
+        dynamic_fields[1]["name"] == "email"
+    )  # Should be sorted: company, email, message, name, phone
     assert dynamic_fields[1]["type"] == "email"
     assert dynamic_fields[1]["required"] == True
     assert dynamic_fields[1]["value"] == "john@example.com"

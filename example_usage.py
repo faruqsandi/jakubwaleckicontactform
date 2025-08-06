@@ -5,7 +5,10 @@ This script demonstrates how to use the selenium-based form detection
 to search for contact forms on a domain and update the database.
 """
 
-from contactform.detection.selenium_handler import search_domain_form, batch_search_domain_forms
+from contactform.detection.selenium_handler import (
+    search_domain_form,
+    batch_search_domain_forms,
+)
 from contactform.detection.models import ContactFormDetection
 from contactform.mission.crud import get_db
 import logging
@@ -16,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def example_single_domain() -> Optional[ContactFormDetection]:
+def example_single_domain() -> ContactFormDetection | None:
     """Example of searching for forms on a single domain."""
     domain = "50safe.pl"
 
@@ -41,11 +44,7 @@ def example_single_domain() -> Optional[ContactFormDetection]:
 
 def example_multiple_domains() -> list[ContactFormDetection]:
     """Example of searching for forms on multiple domains."""
-    domains = [
-        "50safe.pl",
-        "example.com",
-        "google.com"
-    ]
+    domains = ["50safe.pl", "example.com", "google.com"]
 
     try:
         # Search for contact forms on multiple domains
@@ -66,7 +65,7 @@ def example_multiple_domains() -> list[ContactFormDetection]:
         return []
 
 
-def example_with_existing_db_session() -> Optional[ContactFormDetection]:
+def example_with_existing_db_session() -> ContactFormDetection | None:
     """Example using an existing database session."""
     domain = "50safe.pl"
 

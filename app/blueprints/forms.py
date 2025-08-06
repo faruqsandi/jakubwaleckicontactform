@@ -1,4 +1,6 @@
-from contactform.detection.selenium_handler import search_domain_form as helper_search_domain_form, batch_search_domain_forms
+from contactform.detection.selenium_handler import (
+    search_domain_form as helper_search_domain_form,
+)
 from flask import Blueprint, render_template, redirect, url_for, session, flash, request
 from contactform.mission.crud import get_db
 from contactform.detection.crud import ContactFormDetectionCRUD
@@ -31,7 +33,9 @@ def missing_forms():
 
                     if detections:
                         # Add the latest detection record for this domain
-                        latest_detection = detections[0]  # Assuming they are ordered by date
+                        latest_detection = detections[
+                            0
+                        ]  # Assuming they are ordered by date
                         missing_forms_data.append(
                             {
                                 "domain": domain,
@@ -54,7 +58,9 @@ def missing_forms():
                         )
 
                 # Sort the data so completed records appear at the bottom
-                missing_forms_data.sort(key=lambda x: (x["status"] == "completed", x["domain"]))
+                missing_forms_data.sort(
+                    key=lambda x: (x["status"] == "completed", x["domain"])
+                )
 
             finally:
                 db.close()

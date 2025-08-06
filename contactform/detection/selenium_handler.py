@@ -5,15 +5,14 @@ This module provides functionality to detect contact forms on websites using Sel
 and update the ContactFormDetection database with the results.
 """
 
-from typing import Optional, Dict, Any, Union, List
+from typing import Optional, Dict, Any
 from urllib.parse import urljoin, urlparse
 import logging
-from datetime import datetime, timezone
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
-from selenium.common.exceptions import WebDriverException, TimeoutException
+from selenium.common.exceptions import WebDriverException
 import chromedriver_autoinstaller  # type: ignore
 
 from sqlalchemy.orm import Session
@@ -47,15 +46,16 @@ def setup_webdriver(headless: bool = True) -> webdriver.Chrome:
         options = Options()
 
         if headless:
-            options.add_argument('--headless')
+            options.add_argument("--headless")
 
         # Additional options for better reliability
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--window-size=1920,1080')
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
+        options.add_argument("--window-size=1920,1080")
         options.add_argument(
-            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        )
 
         service = Service()
         driver = webdriver.Chrome(service=service, options=options)
@@ -88,8 +88,8 @@ def validate_domain(domain: str) -> str:
     domain = domain.strip()
 
     # Add protocol if missing
-    if not domain.startswith(('http://', 'https://')):
-        domain = f'https://{domain}'
+    if not domain.startswith(("http://", "https://")):
+        domain = f"https://{domain}"
 
     # Validate URL structure
     parsed = urlparse(domain)
@@ -99,7 +99,7 @@ def validate_domain(domain: str) -> str:
     return domain
 
 
-def detect_antibot_protection(page_source: str) -> Dict[str, Any]:
+def detect_antibot_protection(page_source: str) -> dict[str, Any]:
     """
     Detect anti-bot protection mechanisms in the page source.
 
@@ -109,10 +109,10 @@ def detect_antibot_protection(page_source: str) -> Dict[str, Any]:
     Returns:
         Dictionary containing protection information
     """
-    protection_info: Dict[str, Any] = {
+    protection_info: dict[str, Any] = {
         "website_antibot_detection": False,
         "form_antibot_detection": False,
-        "form_antibot_type": None
+        "form_antibot_type": None,
     }
 
     source_lower = page_source.lower()
@@ -123,7 +123,7 @@ def detect_antibot_protection(page_source: str) -> Dict[str, Any]:
         "hcaptcha": ["hcaptcha", "h-captcha"],
         "cloudflare": ["cloudflare", "cf-ray", "__cf_bm"],
         "turnstile": ["turnstile", "cf-turnstile"],
-        "custom": ["captcha", "bot-protection", "anti-bot"]
+        "custom": ["captcha", "bot-protection", "anti-bot"],
     }
 
     detected_types: list[str] = []
@@ -136,12 +136,16 @@ def detect_antibot_protection(page_source: str) -> Dict[str, Any]:
     if detected_types:
         protection_info["website_antibot_detection"] = True
         protection_info["form_antibot_detection"] = True
-        protection_info["form_antibot_type"] = detected_types[0]  # Use first detected type
+        protection_info["form_antibot_type"] = detected_types[
+            0
+        ]  # Use first detected type
 
     return protection_info
 
 
-def search_domain_form(domain: str, db_session: Optional[Session] = None) -> ContactFormDetection:
+def search_domain_form(
+    domain: str, db_session: Session | None = None
+) -> ContactFormDetection:
     """
     Search for contact form information on a given domain using Selenium.
 
@@ -180,22 +184,20 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
         logger.info(f"Starting form detection for domain: {domain_name}")
 
         # Check if detection record already exists
-        existing_detections = ContactFormDetectionCRUD.get_by_domain(db_session, domain_name)
+        existing_detections = ContactFormDetectionCRUD.get_by_domain(
+            db_session, domain_name
+        )
         detection_record = existing_detections[0] if existing_detections else None
 
         # Update status to indicate processing has started
         if detection_record:
             ContactFormDetectionCRUD.update(
-                db_session,
-                detection_record.id,
-                detection_status="in_progress"
+                db_session, detection_record.id, detection_status="in_progress"
             )
         else:
             # Create new detection record
             detection_record = ContactFormDetectionCRUD.create(
-                db_session,
-                domain_name=domain_name,
-                detection_status="in_progress"
+                db_session, domain_name=domain_name, detection_status="in_progress"
             )
 
         # Set up webdriver
@@ -224,7 +226,7 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
                 contact_form_present=False,
                 website_antibot_detection=protection_info["website_antibot_detection"],
                 form_antibot_detection=False,
-                form_antibot_type=None
+                form_antibot_type=None,
             )
             if updated_record is None:
                 raise RuntimeError("Failed to update detection record")
@@ -254,9 +256,11 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
                     detection_record.id,
                     detection_status="completed",
                     contact_form_present=False,
-                    website_antibot_detection=protection_info["website_antibot_detection"],
+                    website_antibot_detection=protection_info[
+                        "website_antibot_detection"
+                    ],
                     form_antibot_detection=False,
-                    form_antibot_type=None
+                    form_antibot_type=None,
                 )
                 if updated_record is None:
                     raise RuntimeError("Failed to update detection record")
@@ -272,16 +276,19 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
 
         # Combine protection info (website-level and form-level)
         combined_protection = {
-            "website_antibot_detection": protection_info["website_antibot_detection"] or contact_protection_info["website_antibot_detection"],
+            "website_antibot_detection": protection_info["website_antibot_detection"]
+            or contact_protection_info["website_antibot_detection"],
             "form_antibot_detection": contact_protection_info["form_antibot_detection"],
-            "form_antibot_type": contact_protection_info["form_antibot_type"]
+            "form_antibot_type": contact_protection_info["form_antibot_type"],
         }
 
         # Step 7: Analyze form using AI
         try:
             form_info_raw = get_form_information(gemini_client, contact_page_source)
             # type: ignore
-            logger.info(f"Form analysis completed. Fields found: {len(form_info_raw.get('fields', []))}")
+            logger.info(
+                f"Form analysis completed. Fields found: {len(form_info_raw.get('fields', []))}"
+            )
             # Cast to proper type for better type checking
             form_info = dict(form_info_raw)  # type: ignore
         except Exception as e:
@@ -294,7 +301,7 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
 
         # Extract field information
         form_fields: list[str] = []
-        field_selectors: Dict[str, str] = {}
+        field_selectors: dict[str, str] = {}
 
         if isinstance(fields_data, list):
             for field in fields_data:  # type: ignore
@@ -304,11 +311,15 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
 
                     if isinstance(field_type, str):
                         form_fields.append(field_type)
-                    if isinstance(field_type, str) and isinstance(field_selector, str) and field_selector:
+                    if (
+                        isinstance(field_type, str)
+                        and isinstance(field_selector, str)
+                        and field_selector
+                    ):
                         field_selectors[field_type] = field_selector
 
         # Extract submit button information
-        submit_button_selector: Optional[str] = None
+        submit_button_selector: str | None = None
         submit_button_data = form_info.get("submit_button")  # type: ignore
         if isinstance(submit_button_data, dict):
             selector = submit_button_data.get("selector")  # type: ignore
@@ -316,13 +327,14 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
                 submit_button_selector = selector
 
         # Update form action (try to extract from form tag)
-        form_action: Optional[str] = None
+        form_action: str | None = None
         try:
             from bs4 import BeautifulSoup, Tag
-            soup = BeautifulSoup(contact_page_source, 'html.parser')
-            form_tag = soup.find('form')
+
+            soup = BeautifulSoup(contact_page_source, "html.parser")
+            form_tag = soup.find("form")
             if isinstance(form_tag, Tag):
-                action = form_tag.get('action')
+                action = form_tag.get("action")
                 if isinstance(action, str) and action:
                     form_action = urljoin(contact_page_url, action)
         except Exception as e:
@@ -341,11 +353,13 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
                         combined_protection["form_antibot_type"] = issuer
 
         # Step 9: Update database record
-        update_data: Dict[str, Any] = {
+        update_data: dict[str, Any] = {
             "detection_status": "completed",
             "form_url": contact_page_url,
             "contact_form_present": contact_form_present,
-            "website_antibot_detection": combined_protection["website_antibot_detection"],
+            "website_antibot_detection": combined_protection[
+                "website_antibot_detection"
+            ],
             "form_antibot_detection": combined_protection["form_antibot_detection"],
             "form_antibot_type": combined_protection["form_antibot_type"],
             "form_fields": form_fields if form_fields else None,
@@ -355,9 +369,7 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
         }
 
         updated_record = ContactFormDetectionCRUD.update(
-            db_session,
-            detection_record.id,
-            **update_data
+            db_session, detection_record.id, **update_data
         )
 
         if updated_record is None:
@@ -367,24 +379,24 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
         return updated_record
 
     except WebDriverException as e:
-        logger.error(f"Selenium error during form detection for {domain_name}: {str(e)}")
+        logger.error(
+            f"Selenium error during form detection for {domain_name}: {str(e)}"
+        )
         # Update record with failed status
         if detection_record:
             ContactFormDetectionCRUD.update(
-                db_session,
-                detection_record.id,
-                detection_status="failed"
+                db_session, detection_record.id, detection_status="failed"
             )
         raise
 
     except Exception as e:
-        logger.error(f"Unexpected error during form detection for {domain_name}: {str(e)}")
+        logger.error(
+            f"Unexpected error during form detection for {domain_name}: {str(e)}"
+        )
         # Update record with failed status
         if detection_record:
             ContactFormDetectionCRUD.update(
-                db_session,
-                detection_record.id,
-                detection_status="failed"
+                db_session, detection_record.id, detection_status="failed"
             )
         raise
 
@@ -404,7 +416,9 @@ def search_domain_form(domain: str, db_session: Optional[Session] = None) -> Con
                 logger.warning(f"Error closing database session: {str(e)}")
 
 
-def batch_search_domain_forms(domains: list[str], db_session: Optional[Session] = None) -> list[ContactFormDetection]:
+def batch_search_domain_forms(
+    domains: list[str], db_session: Session | None = None
+) -> list[ContactFormDetection]:
     """
     Search for contact forms on multiple domains.
 
