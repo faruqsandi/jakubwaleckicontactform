@@ -1,10 +1,11 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, redirect, url_for, session, flash
 
-forms_bp = Blueprint('forms', __name__, url_prefix='/forms')
+forms_bp = Blueprint("forms", __name__, url_prefix="/forms")
 
 # Sample data
 sample_missing_forms = ["missingform1.com", "noform.org"]
 sample_domains = ["example.com", "testsite.org", "demo.net", "sample.io"]
+
 
 @forms_bp.route("/missing")
 def missing_forms():
@@ -22,6 +23,7 @@ def missing_forms():
         missing_forms=sample_missing_forms,
         mission_name=session.get("current_mission_name"),
     )
+
 
 @forms_bp.route("/get_forms", methods=["POST"])
 def get_forms():

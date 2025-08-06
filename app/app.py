@@ -19,10 +19,12 @@ app.register_blueprint(config_bp)
 app.register_blueprint(forms_bp)
 app.register_blueprint(submission_bp)
 
+
 @app.route("/")
 def index():
     """Redirect to mission list"""
     return redirect(url_for("mission.mission_list"))
+
 
 @app.route("/reset_session")
 def reset_session():
@@ -30,6 +32,7 @@ def reset_session():
     session.clear()
     flash("Session reset. Please start over.", "info")
     return redirect(url_for("mission.mission_list"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

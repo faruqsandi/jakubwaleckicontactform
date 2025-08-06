@@ -5,17 +5,17 @@ from .crud import (
     update_mission,
     delete_mission,
     MissionCRUD,
-    create_tables
+    create_tables,
 )
 from .models import Mission
 
 __all__ = [
     "create_mission",
-    "get_mission", 
+    "get_mission",
     "get_all_missions",
     "update_mission",
     "delete_mission",
     "MissionCRUD",
     "Mission",
-    "create_tables"
+    "create_tables",
 ]

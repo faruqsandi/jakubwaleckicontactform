@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
-submission_bp = Blueprint('submission', __name__, url_prefix='/submission')
+submission_bp = Blueprint("submission", __name__, url_prefix="/submission")
 
 # Sample data
 sample_fields = [
@@ -11,6 +11,7 @@ sample_fields = [
     {"name": "company", "type": "text", "required": False},
 ]
 sample_domains = ["example.com", "testsite.org", "demo.net", "sample.io"]
+
 
 @submission_bp.route("/config")
 def submission_config():
@@ -25,6 +26,7 @@ def submission_config():
         mission_name=session.get("current_mission_name"),
     )
 
+
 @submission_bp.route("/save_config", methods=["POST"])
 def save_submission_config():
     """Save submission configuration"""
@@ -35,6 +37,7 @@ def save_submission_config():
 
     flash("Submission configuration saved!", "success")
     return redirect(url_for("submission.submission_process"))
+
 
 @submission_bp.route("/process")
 def submission_process():
@@ -51,6 +54,7 @@ def submission_process():
         domains=domains,
         mission_name=session.get("current_mission_name"),
     )
+
 
 @submission_bp.route("/submit_forms", methods=["POST"])
 def submit_forms():

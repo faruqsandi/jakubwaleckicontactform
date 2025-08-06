@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 
-config_bp = Blueprint('config', __name__, url_prefix='/config')
+config_bp = Blueprint("config", __name__, url_prefix="/config")
+
 
 @config_bp.route("/")
 def config_page():
@@ -11,6 +12,7 @@ def config_page():
     return render_template(
         "config.html", mission_name=session.get("current_mission_name")
     )
+
 
 @config_bp.route("/upload_csv", methods=["POST"])
 def upload_csv():
@@ -42,6 +44,7 @@ def upload_csv():
     )
     session["csv_uploaded"] = True
     return redirect(url_for("config.config_page"))
+
 
 @config_bp.route("/clear_csv")
 def clear_csv():
