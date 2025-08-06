@@ -19,7 +19,9 @@ class FormSubmission(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
 
     # Foreign key to Mission
-    mission_id: Mapped[int] = mapped_column(ForeignKey("missions.id"), nullable=False, index=True)
+    mission_id: Mapped[int] = mapped_column(
+        ForeignKey("missions.id"), nullable=False, index=True
+    )
 
     # Domain information
     domain: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
@@ -48,7 +50,9 @@ class FormSubmission(Base):
     response_data: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationship to mission
-    mission: Mapped[Mission] = relationship("Mission", back_populates="form_submissions")
+    mission: Mapped[Mission] = relationship(
+        "Mission", back_populates="form_submissions"
+    )
 
     def __repr__(self) -> str:
         return f"<FormSubmission(id={self.id}, mission_id={self.mission_id}, domain='{self.domain}', status='{self.status}')>"
