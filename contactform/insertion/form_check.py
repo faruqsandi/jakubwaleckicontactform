@@ -106,12 +106,16 @@ def fill_form_fields(
     for field in fields:
         field_label = field["label"]
         field_selector = field["selector"]
-        field_type = field["type"]  # This is the semantic type like "name", "email", "address"
+        field_type = field[
+            "type"
+        ]  # This is the semantic type like "name", "email", "address"
 
         # Get the value for this field using the field type as key
         field_value = values.get(field_type)
         if field_value is None:
-            print(f"⚠ No value provided for field type '{field_type}' (label: '{field_label}'), skipping")
+            print(
+                f"⚠ No value provided for field type '{field_type}' (label: '{field_label}'), skipping"
+            )
             continue
 
         # Find the element
@@ -145,13 +149,18 @@ def fill_form_fields(
                 # Handle textarea
                 element.clear()
                 element.send_keys(field_value)
-                print(f"✓ Filled textarea '{field_label}' ({field_type}) with: {field_value}")
+                print(
+                    f"✓ Filled textarea '{field_label}' ({field_type}) with: {field_value}"
+                )
             elif tag_name == "select":
                 # Handle select dropdown
                 from selenium.webdriver.support.ui import Select
+
                 select = Select(element)
                 select.select_by_visible_text(field_value)
-                print(f"✓ Selected '{field_value}' in dropdown '{field_label}' ({field_type})")
+                print(
+                    f"✓ Selected '{field_value}' in dropdown '{field_label}' ({field_type})"
+                )
             elif tag_name == "input" and input_type in ["checkbox", "radio"]:
                 # Handle checkbox and radio buttons
                 if field_value.lower() in ["true", "1", "yes", "on", "checked"]:
@@ -162,19 +171,33 @@ def fill_form_fields(
                     if element.is_selected():
                         element.click()
                     print(f"✓ Unchecked '{field_label}' ({field_type})")
-            elif tag_name == "input" and input_type in ["text", "email", "password", "tel", "url", "number", "search"]:
+            elif tag_name == "input" and input_type in [
+                "text",
+                "email",
+                "password",
+                "tel",
+                "url",
+                "number",
+                "search",
+            ]:
                 # Handle various text input types
                 element.clear()
                 element.send_keys(field_value)
-                print(f"✓ Filled {input_type} field '{field_label}' ({field_type}) with: {field_value}")
+                print(
+                    f"✓ Filled {input_type} field '{field_label}' ({field_type}) with: {field_value}"
+                )
             else:
                 # Default behavior for unknown or standard input fields
                 element.clear()
                 element.send_keys(field_value)
-                print(f"✓ Filled field '{field_label}' ({field_type}) with: {field_value}")
+                print(
+                    f"✓ Filled field '{field_label}' ({field_type}) with: {field_value}"
+                )
 
         except Exception as e:
-            error_msg = f"Failed to fill field '{field_label}' (type: {field_type}): {str(e)}"
+            error_msg = (
+                f"Failed to fill field '{field_label}' (type: {field_type}): {str(e)}"
+            )
             print(f"✗ {error_msg}")
             errors.append(error_msg)
 
@@ -350,7 +373,9 @@ def submit_form(
             try:
                 # If name fails, try using ID
                 element = driver.find_element(By.ID, submit_selector)
-                print(f"✓ Submit button '{submit_label}' found by ID: {submit_selector}")
+                print(
+                    f"✓ Submit button '{submit_label}' found by ID: {submit_selector}"
+                )
             except NoSuchElementException:
                 error_msg = f"Submit button '{submit_label}' NOT FOUND with selector: {submit_selector}"
                 print(f"✗ {error_msg}")
@@ -376,9 +401,7 @@ def submit_form(
 
 
 def fill_and_submit_form(
-    driver: WebDriver,
-    form_info: dict[str, Any],
-    values: dict[str, str]
+    driver: WebDriver, form_info: dict[str, Any], values: dict[str, str]
 ) -> bool | dict[str, list[str]]:
     """
     Fill and submit a form with provided values.
@@ -445,7 +468,7 @@ def verify_success_message(
         element_type = element_info.get("element_type", "unknown")
 
         if not element_selector:
-            error_msg = f"Success element {i+1} has no selector provided"
+            error_msg = f"Success element {i + 1} has no selector provided"
             print(f"✗ {error_msg}")
             errors.append(error_msg)
             continue
@@ -456,10 +479,14 @@ def verify_success_message(
             # Try to find the element using CSS selector first
             element = driver.find_element(By.CSS_SELECTOR, element_selector)
             if element.is_displayed():
-                print(f"✓ Success {element_type} found and visible: '{element_text}' (selector: {element_selector})")
+                print(
+                    f"✓ Success {element_type} found and visible: '{element_text}' (selector: {element_selector})"
+                )
                 element_found = True
             else:
-                print(f"⚠ Success {element_type} found but not visible: '{element_text}' (selector: {element_selector})")
+                print(
+                    f"⚠ Success {element_type} found but not visible: '{element_text}' (selector: {element_selector})"
+                )
                 element_found = True
         except NoSuchElementException:
             try:
@@ -467,25 +494,29 @@ def verify_success_message(
                 element = driver.find_element(By.ID, element_selector)
                 if element.is_displayed():
                     print(
-                        f"✓ Success {element_type} found by ID and visible: '{element_text}' (selector: {element_selector})")
+                        f"✓ Success {element_type} found by ID and visible: '{element_text}' (selector: {element_selector})"
+                    )
                     element_found = True
                 else:
                     print(
-                        f"⚠ Success {element_type} found by ID but not visible: '{element_text}' (selector: {element_selector})")
+                        f"⚠ Success {element_type} found by ID but not visible: '{element_text}' (selector: {element_selector})"
+                    )
                     element_found = True
             except NoSuchElementException:
                 try:
                     # Try using class name if selector looks like a class
-                    if element_selector.startswith('.'):
+                    if element_selector.startswith("."):
                         class_name = element_selector[1:]
                         element = driver.find_element(By.CLASS_NAME, class_name)
                         if element.is_displayed():
                             print(
-                                f"✓ Success {element_type} found by class and visible: '{element_text}' (selector: {element_selector})")
+                                f"✓ Success {element_type} found by class and visible: '{element_text}' (selector: {element_selector})"
+                            )
                             element_found = True
                         else:
                             print(
-                                f"⚠ Success {element_type} found by class but not visible: '{element_text}' (selector: {element_selector})")
+                                f"⚠ Success {element_type} found by class but not visible: '{element_text}' (selector: {element_selector})"
+                            )
                             element_found = True
                 except NoSuchElementException:
                     # Try to find by text content as fallback
@@ -493,10 +524,14 @@ def verify_success_message(
                         xpath_text_selector = f"//*[contains(text(), '{element_text}')]"
                         element = driver.find_element(By.XPATH, xpath_text_selector)
                         if element.is_displayed():
-                            print(f"✓ Success {element_type} found by text content and visible: '{element_text}'")
+                            print(
+                                f"✓ Success {element_type} found by text content and visible: '{element_text}'"
+                            )
                             element_found = True
                         else:
-                            print(f"⚠ Success {element_type} found by text content but not visible: '{element_text}'")
+                            print(
+                                f"⚠ Success {element_type} found by text content but not visible: '{element_text}'"
+                            )
                             element_found = True
                     except NoSuchElementException:
                         pass
@@ -511,10 +546,14 @@ def verify_success_message(
         if confidence == "high":
             return {"success_verification_errors": errors}
         elif confidence == "medium":
-            print(f"⚠ Some success elements not found, but confidence is only {confidence}")
+            print(
+                f"⚠ Some success elements not found, but confidence is only {confidence}"
+            )
             return {"success_verification_warnings": errors}
         else:
-            print(f"⚠ Success elements not found, but confidence is {confidence} - treating as non-critical")
+            print(
+                f"⚠ Success elements not found, but confidence is {confidence} - treating as non-critical"
+            )
             return True
 
     print("✓ All expected success elements found")
@@ -542,7 +581,7 @@ def check_success_message_after_submission(
         "elements_visible": 0,
         "verification_passed": False,
         "issues": [],
-        "found_elements": []
+        "found_elements": [],
     }
 
     verification_result = verify_success_message(driver, success_info)
@@ -561,7 +600,9 @@ def check_success_message_after_submission(
             result["elements_found"] = max(0, result["elements_checked"] - len(errors))
         elif warnings:
             result["issues"].extend(warnings)
-            result["elements_found"] = max(0, result["elements_checked"] - len(warnings))
+            result["elements_found"] = max(
+                0, result["elements_checked"] - len(warnings)
+            )
             # For warnings (medium confidence), still consider it passed
             if result["confidence"] == "medium":
                 result["verification_passed"] = True
@@ -576,20 +617,24 @@ def check_success_message_after_submission(
             try:
                 element = driver.find_element(By.CSS_SELECTOR, element_selector)
                 actual_text = element.text.strip()
-                result["found_elements"].append({
-                    "expected_text": element_text,
-                    "actual_text": actual_text,
-                    "selector": element_selector,
-                    "visible": element.is_displayed()
-                })
+                result["found_elements"].append(
+                    {
+                        "expected_text": element_text,
+                        "actual_text": actual_text,
+                        "selector": element_selector,
+                        "visible": element.is_displayed(),
+                    }
+                )
                 if element.is_displayed():
                     result["elements_visible"] += 1
             except NoSuchElementException:
-                result["found_elements"].append({
-                    "expected_text": element_text,
-                    "actual_text": None,
-                    "selector": element_selector,
-                    "visible": False
-                })
+                result["found_elements"].append(
+                    {
+                        "expected_text": element_text,
+                        "actual_text": None,
+                        "selector": element_selector,
+                        "visible": False,
+                    }
+                )
 
     return result

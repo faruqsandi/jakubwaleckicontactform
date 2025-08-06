@@ -15,6 +15,7 @@ from .crud import (
 )
 
 from .gemini import get_form_information, select_contact_url, find_success_message
+
 __all__ = [
     "ContactFormDetection",
     "ContactFormDetectionCRUD",
@@ -24,5 +25,5 @@ __all__ = [
     "delete_detection",
     "get_form_information",
     "select_contact_url",
-    "find_success_message"
+    "find_success_message",
 ]
