@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
-app.secret_key = "your-secret-key-here"  # Change this in production
+app.secret_key = (
+    "your-secret-key-here"  # Change this in production pragma: allowlist secret
+)
 
 # Sample data (will be replaced with database calls later)
 sample_missions = [
@@ -203,7 +205,3 @@ def clear_csv():
     session.pop("csv_uploaded", None)
     flash("CSV data cleared.", "info")
     return redirect(url_for("config_page"))
-
-
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)

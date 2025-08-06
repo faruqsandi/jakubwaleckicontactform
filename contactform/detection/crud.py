@@ -10,6 +10,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, desc, asc
 from .models import ContactFormDetection
+from sqlalchemy.sql.expression import true
 
 
 class ContactFormDetectionCRUD:
@@ -210,7 +211,7 @@ class ContactFormDetectionCRUD:
         """
         return (
             db.query(ContactFormDetection)
-            .filter(ContactFormDetection.contact_form_present == True)
+            .filter(ContactFormDetection.contact_form_present == true)
             .order_by(desc(ContactFormDetection.detection_date))
             .offset(skip)
             .limit(limit)
@@ -237,18 +238,18 @@ class ContactFormDetectionCRUD:
             List of ContactFormDetection instances with anti-bot protection
         """
         if level == "website":
-            filter_condition = ContactFormDetection.website_antibot_detection == True
+            filter_condition = ContactFormDetection.website_antibot_detection == true
         elif level == "form":
-            filter_condition = ContactFormDetection.form_antibot_detection == True
+            filter_condition = ContactFormDetection.form_antibot_detection == true
         elif level == "both":
             filter_condition = and_(
-                ContactFormDetection.website_antibot_detection == True,
-                ContactFormDetection.form_antibot_detection == True,
+                ContactFormDetection.website_antibot_detection == true,
+                ContactFormDetection.form_antibot_detection == true,
             )
         else:  # "any"
             filter_condition = or_(
-                ContactFormDetection.website_antibot_detection == True,
-                ContactFormDetection.form_antibot_detection == True,
+                ContactFormDetection.website_antibot_detection == true,
+                ContactFormDetection.form_antibot_detection == true,
             )
 
         return (
