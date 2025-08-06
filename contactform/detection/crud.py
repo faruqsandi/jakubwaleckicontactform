@@ -6,7 +6,7 @@ for the ContactFormDetection model.
 """
 
 from datetime import datetime, timezone
-from typing import List, Optional, Dict, Any
+from typing import Any
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, desc, asc
 from .models import ContactFormDetection

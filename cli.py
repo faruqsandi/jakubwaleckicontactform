@@ -19,11 +19,11 @@ def get_alembic_config():
     """Get Alembic configuration."""
     script_dir = Path(__file__).parent.absolute()
     alembic_cfg_path = script_dir / "alembic.ini"
-    
+
     if not alembic_cfg_path.exists():
         click.echo(f"Error: alembic.ini not found at {alembic_cfg_path}", err=True)
         sys.exit(1)
-    
+
     return Config(str(alembic_cfg_path))
 
 
@@ -33,14 +33,10 @@ def cli():
 
 
 @cli.command()
-@click.option(
-    "--message", "-m",
-    required=True,
-    help="Message describing the migration"
-)
+@click.option("--message", "-m", required=True, help="Message describing the migration")
 def migrate(message):
     """Create a new migration with auto-generated changes.
-    
+
     Example:
         python cli.py migrate -m "Add user table"
     """
@@ -56,7 +52,7 @@ def migrate(message):
 @cli.command()
 def upgrade():
     """Upgrade database to the latest migration (head).
-    
+
     Example:
         python cli.py upgrade
     """
