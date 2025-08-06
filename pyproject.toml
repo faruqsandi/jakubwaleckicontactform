@@ -9,6 +9,7 @@ dependencies = [
     "beautifulsoup4>=4.13.4",
     "chromedriver-autoinstaller>=0.6.4",
     "click>=8.1.0",
+    "flask>=3.0.0",
     "google-api-python-client>=2.177.0",
     "google-genai>=1.28.0",
     "python-dotenv>=1.1.1",
