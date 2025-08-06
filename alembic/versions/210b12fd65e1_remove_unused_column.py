@@ -6,6 +6,7 @@ Create Date: 2025-08-06 23:17:28.027442
 
 """
 
+from typing import Union
 from collections.abc import Sequence
 
 from alembic import op
@@ -14,7 +15,7 @@ from sqlalchemy.dialects import sqlite
 
 # revision identifiers, used by Alembic.
 revision: str = "210b12fd65e1"  # pragma: allowlist secret
-down_revision: str | Sequence[str] | None = "8de95a752a5e"
+down_revision: str | Sequence[str] | None = "8de95a752a5e"  # pragma: allowlist secret
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

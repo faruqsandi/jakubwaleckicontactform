@@ -3,7 +3,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 import chromedriver_autoinstaller
 from contactform.gpt import select_contact_url, gemini_client, get_form_information
-from contactform.helper import get_all_links_from_source, verify_form_elements
+from contactform.insertion.form_check import get_all_links_from_source, verify_form_elements
 
 chromedriver_autoinstaller.install()
 options = Options()

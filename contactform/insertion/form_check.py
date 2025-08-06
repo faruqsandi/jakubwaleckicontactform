@@ -86,6 +86,103 @@ def verify_form_fields(
     return True
 
 
+def fill_form_fields(
+    driver: WebDriver, fields: list[dict[str, str]], values: dict[str, str]
+) -> bool | dict[str, list[str]]:
+    """
+    Fill form fields with provided values.
+
+    Args:
+        driver (WebDriver): The Selenium WebDriver instance.
+        fields (list[dict[str, str]]): List of field dictionaries containing label, selector, and type.
+        values (dict[str, str]): Dictionary mapping field types to their values (e.g., {"name": "John", "email": "john@example.com"}).
+
+    Returns:
+        bool | dict[str, list[str]]: True if all fields filled successfully, otherwise dict with error messages.
+    """
+    print(f"Filling {len(fields)} form fields:")
+    errors = []
+
+    for field in fields:
+        field_label = field["label"]
+        field_selector = field["selector"]
+        field_type = field["type"]  # This is the semantic type like "name", "email", "address"
+
+        # Get the value for this field using the field type as key
+        field_value = values.get(field_type)
+        if field_value is None:
+            print(f"⚠ No value provided for field type '{field_type}' (label: '{field_label}'), skipping")
+            continue
+
+        # Find the element
+        element = None
+        try:
+            # Try to find the element using CSS selector first
+            element = driver.find_element(By.CSS_SELECTOR, field_selector)
+        except NoSuchElementException:
+            try:
+                # If CSS selector fails, try using name attribute
+                element = driver.find_element(By.NAME, field_selector)
+            except NoSuchElementException:
+                try:
+                    # If name fails, try using ID
+                    element = driver.find_element(By.ID, field_selector)
+                except NoSuchElementException:
+                    error_msg = f"Field '{field_label}' (type: {field_type}) NOT FOUND with selector: {field_selector}"
+                    print(f"✗ {error_msg}")
+                    errors.append(error_msg)
+                    continue
+
+        # Determine the HTML input type and fill accordingly
+        try:
+            # Get the HTML tag and type attribute
+            tag_name = element.tag_name.lower()
+            input_type = element.get_attribute("type")
+            if input_type:
+                input_type = input_type.lower()
+
+            if tag_name == "textarea":
+                # Handle textarea
+                element.clear()
+                element.send_keys(field_value)
+                print(f"✓ Filled textarea '{field_label}' ({field_type}) with: {field_value}")
+            elif tag_name == "select":
+                # Handle select dropdown
+                from selenium.webdriver.support.ui import Select
+                select = Select(element)
+                select.select_by_visible_text(field_value)
+                print(f"✓ Selected '{field_value}' in dropdown '{field_label}' ({field_type})")
+            elif tag_name == "input" and input_type in ["checkbox", "radio"]:
+                # Handle checkbox and radio buttons
+                if field_value.lower() in ["true", "1", "yes", "on", "checked"]:
+                    if not element.is_selected():
+                        element.click()
+                    print(f"✓ Checked '{field_label}' ({field_type})")
+                else:
+                    if element.is_selected():
+                        element.click()
+                    print(f"✓ Unchecked '{field_label}' ({field_type})")
+            elif tag_name == "input" and input_type in ["text", "email", "password", "tel", "url", "number", "search"]:
+                # Handle various text input types
+                element.clear()
+                element.send_keys(field_value)
+                print(f"✓ Filled {input_type} field '{field_label}' ({field_type}) with: {field_value}")
+            else:
+                # Default behavior for unknown or standard input fields
+                element.clear()
+                element.send_keys(field_value)
+                print(f"✓ Filled field '{field_label}' ({field_type}) with: {field_value}")
+
+        except Exception as e:
+            error_msg = f"Failed to fill field '{field_label}' (type: {field_type}): {str(e)}"
+            print(f"✗ {error_msg}")
+            errors.append(error_msg)
+
+    if errors:
+        return {"fill_errors": errors}
+    return True
+
+
 def verify_submit_button(
     driver: WebDriver, submit_button: dict[str, str] | None
 ) -> bool | dict[str, list[str]]:
