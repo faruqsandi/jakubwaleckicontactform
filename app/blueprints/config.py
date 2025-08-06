@@ -21,8 +21,8 @@ def extract_fqdn(domain: str) -> tuple[str, bool]:
     domain = domain.strip()
 
     # If no protocol, add one for urlparse to work properly
-    if not domain.startswith(('http://', 'https://')):
-        domain = 'http://' + domain
+    if not domain.startswith(("http://", "https://")):
+        domain = "http://" + domain
 
     parsed = urlparse(domain)
     hostname = parsed.hostname
@@ -31,7 +31,7 @@ def extract_fqdn(domain: str) -> tuple[str, bool]:
         return "", False
 
     # Validate domain has extension (at least one dot with 2+ char extension)
-    is_valid = '.' in hostname and len(hostname.split('.')[-1]) >= 2
+    is_valid = "." in hostname and len(hostname.split(".")[-1]) >= 2
 
     return hostname, is_valid
 
@@ -112,7 +112,9 @@ def upload_csv():
 
         if invalid_domains:
             flash(
-                f"Invalid domains found: {', '.join(invalid_domains[:5])}{'...' if len(invalid_domains) > 5 else ''}", "warning")
+                f"Invalid domains found: {', '.join(invalid_domains[:5])}{'...' if len(invalid_domains) > 5 else ''}",
+                "warning",
+            )
 
         session["csv_uploaded"] = True
         return redirect(url_for("config.config_page"))
@@ -156,7 +158,7 @@ def continue_to_forms():
                         contact_form_present=False,
                         website_antibot_detection=False,
                         form_antibot_detection=False,
-                        detection_status="pending"
+                        detection_status="pending",
                     )
                     new_domains_count += 1
                 else:
@@ -164,9 +166,13 @@ def continue_to_forms():
 
             message_parts = []
             if new_domains_count > 0:
-                message_parts.append(f"{new_domains_count} new domains added for detection")
+                message_parts.append(
+                    f"{new_domains_count} new domains added for detection"
+                )
             if existing_domains_count > 0:
-                message_parts.append(f"{existing_domains_count} domains already existed")
+                message_parts.append(
+                    f"{existing_domains_count} domains already existed"
+                )
 
             if message_parts:
                 flash(f"Processing complete: {', '.join(message_parts)}.", "success")

@@ -58,9 +58,9 @@ def test_extract_fqdn():
             print(f"  Got:      '{result_domain}', valid={result_valid}")
 
             if not domain_match:
-                print(f"  Domain mismatch!")
+                print("  Domain mismatch!")
             if not valid_match:
-                print(f"  Validity mismatch!")
+                print("  Validity mismatch!")
             print()
 
         except Exception as e:
