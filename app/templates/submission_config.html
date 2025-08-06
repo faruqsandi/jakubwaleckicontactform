@@ -31,6 +31,15 @@
                     form submissions.
                 </p>
 
+                {% set has_existing_values = fields | selectattr('value') | list | length > 0 %}
+                {% if has_existing_values %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Note:</strong> This form has been pre-filled with your previously saved values. You can
+                    modify them as needed.
+                </div>
+                {% endif %}
+
                 <form method="POST" action="{{ url_for('submission.save_submission_config') }}">
                     {% for field in fields %}
                     <div class="mb-3">
@@ -43,16 +52,20 @@
 
                         {% if field.type == 'textarea' %}
                         <textarea class="form-control" id="{{ field.name }}" name="{{ field.name }}" rows="4" {% if
-                            field.required %}required{% endif %} placeholder="Enter {{ field.name }}"></textarea>
+                            field.required %}required{% endif %}
+                            placeholder="Enter {{ field.name }}">{{ field.value }}</textarea>
                         {% elif field.type == 'email' %}
                         <input type="email" class="form-control" id="{{ field.name }}" name="{{ field.name }}" {% if
-                            field.required %}required{% endif %} placeholder="Enter {{ field.name }}">
+                            field.required %}required{% endif %} placeholder="Enter {{ field.name }}"
+                            value="{{ field.value }}">
                         {% elif field.type == 'tel' %}
                         <input type="tel" class="form-control" id="{{ field.name }}" name="{{ field.name }}" {% if
-                            field.required %}required{% endif %} placeholder="Enter {{ field.name }}">
+                            field.required %}required{% endif %} placeholder="Enter {{ field.name }}"
+                            value="{{ field.value }}">
                         {% else %}
                         <input type="text" class="form-control" id="{{ field.name }}" name="{{ field.name }}" {% if
-                            field.required %}required{% endif %} placeholder="Enter {{ field.name }}">
+                            field.required %}required{% endif %} placeholder="Enter {{ field.name }}"
+                            value="{{ field.value }}">
                         {% endif %}
 
                         {% if field.required %}

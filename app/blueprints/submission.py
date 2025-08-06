@@ -46,17 +46,28 @@ def submission_config() -> Response | str:
             flash("No form fields found for the selected domains. Please ensure form detection is completed.", "warning")
             return redirect(url_for("forms.missing_forms"))
 
+        # Get existing mission data to pre-fill form
+        mission_id = session["current_mission_id"]
+        existing_mission = MissionCRUD.get_mission(mission_id, db)
+
+        if not existing_mission:
+            flash("Mission not found.", "error")
+            return redirect(url_for("mission.mission_list"))
+
+        existing_values = existing_mission.pre_defined_fields if existing_mission.pre_defined_fields else {}
+
         # Convert set to list of dictionaries for the template
         # Create a more sophisticated field mapping based on field names
         dynamic_fields: List[Dict[str, Any]] = []
         for field_name in sorted(all_form_fields):
             field_type = _determine_field_type(field_name)
-            # is_required = _determine_if_required(field_name)
-            is_required = True
+            is_required = _determine_if_required(field_name)
+
             dynamic_fields.append({
                 "name": field_name,
                 "type": field_type,
-                "required": is_required
+                "required": is_required,
+                "value": existing_values.get(field_name, "")  # Pre-fill with existing value
             })
 
         return render_template(
@@ -125,12 +136,33 @@ def save_submission_config():
                 if detection.form_fields:
                     all_form_fields.update(detection.form_fields)
 
+        # Validate that we have form fields to work with
+        if not all_form_fields:
+            flash("No form fields found for the selected domains. Please ensure form detection is completed.", "warning")
+            return redirect(url_for("forms.missing_forms"))
+
         # Collect form values into pre_defined_fields dictionary
         pre_defined_fields: Dict[str, str] = {}
+        missing_required_fields: List[str] = []
+
         for field_name in all_form_fields:
             field_value = request.form.get(field_name)
-            if field_value:  # Only store non-empty values
-                pre_defined_fields[field_name] = field_value
+            if field_value and field_value.strip():  # Only store non-empty values
+                pre_defined_fields[field_name] = field_value.strip()
+            else:
+                # Check if this is a required field
+                if _determine_if_required(field_name):
+                    missing_required_fields.append(field_name)
+
+        # Validate required fields are filled
+        if missing_required_fields:
+            flash(f"Please fill in all required fields: {', '.join(missing_required_fields)}", "error")
+            return redirect(url_for("submission.submission_config"))
+
+        # Ensure we have at least some data to save
+        if not pre_defined_fields:
+            flash("Please fill in at least one field before continuing.", "warning")
+            return redirect(url_for("submission.submission_config"))
 
         # Update the mission with the pre-defined fields
         mission = MissionCRUD.update_mission(
