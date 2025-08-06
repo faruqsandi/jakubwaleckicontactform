@@ -36,7 +36,9 @@ def get_all_links_from_source(source: str, base_url: str) -> list[tuple[str, str
     return link_list
 
 
-def verify_form_fields(driver: WebDriver, fields: list[dict[str, str]]) -> bool | dict[str, list[str]]:
+def verify_form_fields(
+    driver: WebDriver, fields: list[dict[str, str]]
+) -> bool | dict[str, list[str]]:
     """
     Verify the presence of form fields.
 
@@ -84,7 +86,9 @@ def verify_form_fields(driver: WebDriver, fields: list[dict[str, str]]) -> bool 
     return True
 
 
-def verify_submit_button(driver: WebDriver, submit_button: dict[str, str] | None) -> bool | dict[str, list[str]]:
+def verify_submit_button(
+    driver: WebDriver, submit_button: dict[str, str] | None
+) -> bool | dict[str, list[str]]:
     """
     Verify the presence of the submit button.
 
@@ -132,7 +136,9 @@ def verify_submit_button(driver: WebDriver, submit_button: dict[str, str] | None
         return True
 
 
-def verify_protection_mechanisms(protection: list[dict[str, str]]) -> bool | dict[str, list[str]]:
+def verify_protection_mechanisms(
+    protection: list[dict[str, str]],
+) -> bool | dict[str, list[str]]:
     """
     Verify and display protection mechanisms.
 
@@ -166,7 +172,9 @@ def verify_protection_mechanisms(protection: list[dict[str, str]]) -> bool | dic
         return True
 
 
-def verify_form_elements(driver: WebDriver, form_info: dict[str, Any]) -> bool | dict[str, list[str]]:
+def verify_form_elements(
+    driver: WebDriver, form_info: dict[str, Any]
+) -> bool | dict[str, list[str]]:
     """
     Verify the presence of form fields, submit button, and protection mechanisms.
 
