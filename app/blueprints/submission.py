@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from werkzeug import Response
 from contactform.detection.crud import ContactFormDetectionCRUD
 from contactform.mission.crud import MissionCRUD, get_db
+from contactform.insertion.models import FormSubmission
+from datetime import datetime, timezone
 from typing import Any
 
 submission_bp = Blueprint("submission", __name__, url_prefix="/submission")
@@ -216,10 +218,7 @@ def submission_process():
         flash("Please select a mission first.", "warning")
         return redirect(url_for("mission.mission_list"))
 
-    # Use uploaded domains if available, otherwise use sample data
-    domains = session.get("uploaded_domains", sample_domains)
-
-    # Get mission data to display predefined values
+    # Get mission data to check submitted_date and display predefined values
     db = get_db()
     try:
         mission_id = session["current_mission_id"]
@@ -231,6 +230,16 @@ def submission_process():
 
         predefined_values = mission.pre_defined_fields or {}
 
+        # Determine domains and submission status based on submitted_date
+        if mission.submitted_date is None:
+            # Mission not yet submitted - use domains from session
+            domains = session.get("uploaded_domains", sample_domains)
+            is_submitted = False
+        else:
+            # Mission already submitted - get domains from form_submissions
+            domains = [submission.domain for submission in mission.form_submissions]
+            is_submitted = True
+
     finally:
         db.close()
 
@@ -239,12 +248,57 @@ def submission_process():
         domains=domains,
         mission_name=session.get("current_mission_name"),
         predefined_values=predefined_values,
+        is_submitted=is_submitted,
     )
 
 
 @submission_bp.route("/submit_forms", methods=["POST"])
 def submit_forms():
     """Submit forms to all domains"""
-    # TODO: Implement form submission logic
-    flash("Forms submitted successfully to all domains!", "success")
+    if "current_mission_id" not in session:
+        flash("Please select a mission first.", "warning")
+        return redirect(url_for("mission.mission_list"))
+
+    db = get_db()
+    try:
+        mission_id = session["current_mission_id"]
+        mission = MissionCRUD.get_mission(mission_id, db)
+
+        if not mission:
+            flash("Mission not found.", "error")
+            return redirect(url_for("mission.mission_list"))
+
+        # Check if mission is already submitted
+        if mission.submitted_date is not None:
+            flash("Mission has already been submitted.", "warning")
+            return redirect(url_for("submission.submission_process"))
+
+        # Get domains from session
+        domains = session.get("uploaded_domains", [])
+        if not domains:
+            flash("No domains found in session.", "warning")
+            return redirect(url_for("submission.submission_config"))
+
+        # Set mission submitted_date
+        mission.submitted_date = datetime.now(timezone.utc)
+
+        # Create FormSubmission instances for each domain
+        for domain in domains:
+            form_submission = FormSubmission(
+                mission_id=mission_id,
+                domain=domain,
+                submitted_fields={},
+                status="pending",
+            )
+            db.add(form_submission)
+
+        db.commit()
+        flash("Forms submitted successfully to all domains!", "success")
+
+    except Exception as e:
+        db.rollback()
+        flash(f"Error submitting forms: {str(e)}", "error")
+    finally:
+        db.close()
+
     return redirect(url_for("submission.submission_process"))

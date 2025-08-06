@@ -43,14 +43,26 @@
                                             <i class="bi bi-globe"></i> {{ domain }}
                                         </td>
                                         <td>
+                                            {% if is_submitted %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Submitted
+                                            </span>
+                                            {% else %}
                                             <span class="badge bg-success">
                                                 <i class="bi bi-check-circle"></i> Ready
                                             </span>
+                                            {% endif %}
                                         </td>
                                         <td>
+                                            {% if is_submitted %}
+                                            <span class="badge bg-info">
+                                                <i class="bi bi-check-circle"></i> Completed
+                                            </span>
+                                            {% else %}
                                             <span class="badge bg-secondary">
                                                 <i class="bi bi-clock"></i> Pending
                                             </span>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -68,17 +80,27 @@
                     </div>
                     <div class="card-body">
                         <form method="POST" action="{{ url_for('submission.submit_forms') }}">
-                            <button type="submit" class="btn btn-success btn-lg w-100 mb-3">
-                                <i class="bi bi-send"></i> Submit All Forms
+                            <button type="submit" class="btn btn-success btn-lg w-100 mb-3" {% if is_submitted
+                                %}disabled{% endif %}>
+                                <i class="bi bi-send"></i> {% if is_submitted %}Already Submitted{% else %}Submit All
+                                Forms{% endif %}
                             </button>
                         </form>
 
-                        <div class="alert alert-warning">
-                            <h6><i class="bi bi-exclamation-triangle"></i> Important:</h6>
+                        <div class="alert {% if is_submitted %}alert-info{% else %}alert-warning{% endif %}">
+                            <h6><i
+                                    class="bi bi-{% if is_submitted %}info-circle{% else %}exclamation-triangle{% endif %}"></i>
+                                {% if is_submitted %}Submission Complete{% else %}Important{% endif %}:</h6>
                             <ul class="mb-0 small">
+                                {% if is_submitted %}
+                                <li>Forms have been submitted to {{ domains|length }} domains</li>
+                                <li>Check individual submission results below</li>
+                                <li>Mission is now in read-only mode</li>
+                                {% else %}
                                 <li>This will submit forms to {{ domains|length }} domains</li>
                                 <li>Process cannot be undone</li>
                                 <li>Monitor the results carefully</li>
+                                {% endif %}
                             </ul>
                         </div>
 
@@ -88,7 +110,9 @@
                                 <i class="bi bi-eye"></i> Preview Data
                             </button>
 
-                            <a href="{{ url_for('submission.submission_config') }}" class="btn btn-outline-secondary">
+                            <a href="{{ url_for('submission.submission_config') }}"
+                                class="btn btn-outline-secondary {% if is_submitted %}disabled{% endif %}" {% if
+                                is_submitted %}onclick="return false;" {% endif %}>
                                 <i class="bi bi-arrow-left"></i> Back to Config
                             </a>
                         </div>
@@ -102,10 +126,17 @@
                 <div class="card-body">
                     <h6><i class="bi bi-info-circle"></i> Submission Process:</h6>
                     <ol class="mb-0">
+                        {% if is_submitted %}
+                        <li>✅ Forms have been submitted sequentially to avoid overwhelming servers</li>
+                        <li>✅ Each submission has been logged and tracked</li>
+                        <li>✅ Failed submissions will be retried automatically</li>
+                        <li>✅ Detailed report is available for review</li>
+                        {% else %}
                         <li>Forms will be submitted sequentially to avoid overwhelming servers</li>
                         <li>Each submission will be logged and tracked</li>
                         <li>Failed submissions will be retried automatically</li>
                         <li>You'll receive a detailed report upon completion</li>
+                        {% endif %}
                     </ol>
                 </div>
             </div>

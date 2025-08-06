@@ -29,6 +29,7 @@ class Mission(Base):
     created_date: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
+    submitted_date: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     last_updated: Mapped[datetime] = mapped_column(
         DateTime,
         default=lambda: datetime.now(timezone.utc),
