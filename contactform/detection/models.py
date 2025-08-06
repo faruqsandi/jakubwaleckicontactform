@@ -25,7 +25,7 @@ class ContactFormDetection(Base):
     # website_antibot_details: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Form URL and presence
-    form_url: Mapped[str] = mapped_column(Text, nullable=False)
+    form_url: Mapped[str] = mapped_column(Text, nullable=True)
     contact_form_present: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # Anti-bot detection on form level

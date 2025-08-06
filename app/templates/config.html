@@ -30,7 +30,14 @@
                 <div class="alert alert-success">
                     <h6><i class="bi bi-check-circle"></i> CSV Already Uploaded</h6>
                     <p class="mb-2">File: <strong>{{ session.get('csv_filename', 'Unknown') }}</strong></p>
-                    <p class="mb-0">Found <strong>{{ session.get('uploaded_domains')|length }}</strong> domains</p>
+                    <p class="mb-1">Found <strong>{{ session.get('uploaded_domains')|length }}</strong> valid domains
+                    </p>
+                    {% if session.get('invalid_domains') %}
+                    <p class="mb-0 text-warning">
+                        <small><i class="bi bi-exclamation-triangle"></i> {{ session.get('invalid_domains')|length }}
+                            invalid domains will be ignored</small>
+                    </p>
+                    {% endif %}
                 </div>
 
                 <div class="card bg-light mb-3">
@@ -50,6 +57,25 @@
                             </div>
                             {% endfor %}
                         </div>
+
+                        {% if session.get('invalid_domains') %}
+                        <hr>
+                        <h6 class="text-warning"><i class="bi bi-exclamation-triangle"></i> Invalid Domains (Will be
+                            ignored)</h6>
+                        <div class="row">
+                            {% for domain in session.get('invalid_domains') %}
+                            <div class="col-md-6 col-lg-4 mb-2">
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-x-circle"></i> {{ domain }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> Invalid domains are missing proper extensions (e.g., .com,
+                            .org) and will not be processed.
+                        </small>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -91,7 +117,7 @@
         <!-- Next step button -->
         <div class="mt-3">
             <div class="d-flex justify-content-end">
-                <a href="{{ url_for('forms.missing_forms') }}" class="btn btn-success">
+                <a href="{{ url_for('config.continue_to_forms') }}" class="btn btn-success">
                     <i class="bi bi-arrow-right"></i> Continue to Missing Forms
                 </a>
             </div>

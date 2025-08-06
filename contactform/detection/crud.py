@@ -20,7 +20,7 @@ class ContactFormDetectionCRUD:
     def create(
         db: Session,
         domain_name: str,
-        form_url: str,
+        form_url: str | None = None,
         contact_form_present: bool = False,
         website_antibot_detection: bool = False,
         form_antibot_detection: bool = False,
