@@ -29,7 +29,18 @@
                     <small>Showing all domains with their current form detection status (completed items at
                         bottom)</small>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="autoRefreshToggle"
+                            onchange="toggleAutoRefresh()">
+                        <label class="form-check-label text-white" for="autoRefreshToggle">
+                            <small>Auto-refresh (5s)</small>
+                        </label>
+                    </div>
+                    <!-- Auto-refresh indicator -->
+                    <div id="auto-refresh-indicator" class="badge bg-light text-dark" style="display: none;">
+                        <i class="bi bi-arrow-clockwise spin"></i> Auto-refreshed
+                    </div>
                     <button class="btn btn-outline-light btn-sm" hx-get="{{ url_for('forms.table_content') }}"
                         hx-target="#table-body" hx-indicator="#refresh-indicator">
                         <i class="bi bi-arrow-clockwise"></i> Refresh Table
@@ -129,4 +140,87 @@
         </div>
     </div>
 </div>
+
+<style>
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .fade-in-out {
+        animation: fadeInOut 2s ease-in-out;
+    }
+
+    @keyframes fadeInOut {
+        0% {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        20% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        80% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        100% {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+    }
+</style>
+
+<script>
+    let autoRefreshInterval = null;
+
+    function showAutoRefreshIndicator() {
+        const indicator = document.getElementById('auto-refresh-indicator');
+        indicator.style.display = 'inline-block';
+        indicator.classList.add('fade-in-out');
+
+        // Hide the indicator after animation completes
+        setTimeout(() => {
+            indicator.style.display = 'none';
+            indicator.classList.remove('fade-in-out');
+        }, 2000);
+    }
+
+    function toggleAutoRefresh() {
+        const toggle = document.getElementById('autoRefreshToggle');
+
+        if (toggle.checked) {
+            // Start auto-refresh every 5 seconds
+            autoRefreshInterval = setInterval(function () {
+                showAutoRefreshIndicator();
+                htmx.trigger('#table-body', 'refresh');
+            }, 5000);
+        } else {
+            // Stop auto-refresh
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+    }
+
+    // Clean up interval when page is unloaded
+    window.addEventListener('beforeunload', function () {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+        }
+    });
+</script>
 {% endblock %}
