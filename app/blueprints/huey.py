@@ -7,11 +7,6 @@ from datetime import datetime
 import pickle
 from huey_config import huey, dummy_task, background_form_detection
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-import sys
-import os
-
-# Add the parent directory to the path so we can import huey_config
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 
 huey_bp = Blueprint("huey", __name__, url_prefix="/huey")

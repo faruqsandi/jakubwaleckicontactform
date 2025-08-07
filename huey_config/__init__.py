@@ -6,7 +6,7 @@ import os
 from huey import SqliteHuey
 from datetime import datetime
 
-# Use SQLite database for Huey tasks
+# Use SQLite database for Huey tasks - now in the same directory as this module
 HUEY_DB_PATH = os.path.join(os.path.dirname(__file__), "huey_tasks.db")
 
 # Initialize Huey with SQLite backend
