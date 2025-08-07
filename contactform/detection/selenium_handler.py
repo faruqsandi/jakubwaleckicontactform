@@ -414,30 +414,3 @@ def search_domain_form(
                 db_session.close()
             except RuntimeError as e:
                 logger.warning(f"Error closing database session: {str(e)}")
-
-
-def batch_search_domain_forms(
-    domains: list[str], db_session: Session | None = None
-) -> list[ContactFormDetection]:
-    """
-    Search for contact forms on multiple domains.
-
-    Args:
-        domains: List of domain names to search
-        db_session: Optional database session
-
-    Returns:
-        List of ContactFormDetection records
-    """
-    results: list[ContactFormDetection] = []
-
-    for domain in domains:
-        try:
-            result = search_domain_form(domain, db_session)
-            results.append(result)
-        except (ValueError, WebDriverException, RuntimeError) as e:
-            logger.error(f"Failed to process domain {domain}: {str(e)}")
-            # Continue with next domain
-            continue
-
-    return results
