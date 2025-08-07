@@ -1,3 +1,5 @@
+from huey.api import Result, Task
+from huey_config import huey
 from huey_config import get_task_status
 from flask import Blueprint, render_template, redirect, url_for, session, flash, request
 from contactform.mission.crud import get_db, MissionCRUD
@@ -190,7 +192,6 @@ def search_domain_form():
 
     try:
         from huey_config import background_form_detection_task
-        from contactform.detection.crud import ContactFormDetectionCRUD
 
         db = get_db()
         try:
@@ -204,7 +205,7 @@ def search_domain_form():
 
             # Start background task for form detection
             task_result = background_form_detection_task(domain)
-            task_id = task_result.id
+            task_id = str(task_result.id)  # Convert to string
 
             # Update the detection record with the task ID and set status to pending
             ContactFormDetectionCRUD.update(
@@ -256,5 +257,69 @@ def remove_domain():
             f"Domain '{domain_to_remove}' was not found in the current mission.",
             "warning",
         )
+
+    return redirect(url_for("forms.missing_forms"))
+
+
+@forms_bp.route("/cancel_all_tasks", methods=["POST"])
+def cancel_all_tasks():
+    """Cancel all Huey tasks and clear task IDs from all domains in session"""
+    if "current_mission_id" not in session:
+        flash("Please select a mission first.", "warning")
+        return redirect(url_for("mission.mission_list"))
+
+    try:
+        db = get_db()
+        try:
+            canceled_count = 0
+            cleared_count = 0
+
+            # Get all domains from session
+            uploaded_domains = session.get("uploaded_domains", [])
+
+            if uploaded_domains:
+                for domain in uploaded_domains:
+                    # Get detection records for this domain
+                    detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
+
+                    for detection in detections:
+                        # If there's a task_id, try to cancel it
+                        if detection.task_id:
+                            try:
+                                # Create Result object and revoke the task
+                                result = Result(
+                                    huey=huey, task=Task(id=detection.task_id)
+                                )
+                                result.revoke()
+                                canceled_count += 1
+                            except Exception as e:
+                                # Log error but continue with other tasks
+                                print(
+                                    f"Error canceling task {detection.task_id}: {str(e)}"
+                                )
+
+                        # Clear task_id and reset status if it was pending
+                        if detection.detection_status == "pending" or detection.task_id:
+                            ContactFormDetectionCRUD.update(
+                                db=db,
+                                detection_id=detection.id,
+                                detection_status="not_found",  # Reset to initial state
+                                task_id=None,  # Clear task_id
+                            )
+                            cleared_count += 1
+
+            if canceled_count > 0 or cleared_count > 0:
+                flash(
+                    f"Successfully canceled {canceled_count} tasks and cleared {cleared_count} detection records.",
+                    "success",
+                )
+            else:
+                flash("No active tasks found to cancel.", "info")
+
+        finally:
+            db.close()
+
+    except Exception as e:
+        flash(f"Error canceling tasks: {str(e)}", "error")
 
     return redirect(url_for("forms.missing_forms"))

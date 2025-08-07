@@ -29,10 +29,20 @@
                     <small>Showing all domains with their current form detection status (completed items at
                         bottom)</small>
                 </div>
-                <button class="btn btn-outline-light btn-sm" hx-get="{{ url_for('forms.table_content') }}"
-                    hx-target="#table-body" hx-indicator="#refresh-indicator">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh Table
-                </button>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-light btn-sm" hx-get="{{ url_for('forms.table_content') }}"
+                        hx-target="#table-body" hx-indicator="#refresh-indicator">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh Table
+                    </button>
+                    <form method="POST" action="{{ url_for('forms.cancel_all_tasks') }}" class="d-inline"
+                        hx-post="{{ url_for('forms.cancel_all_tasks') }}" hx-trigger="submit" hx-swap="none"
+                        hx-on::after-request="htmx.trigger('#table-body', 'refresh')">
+                        <button type="submit" class="btn btn-outline-danger btn-sm"
+                            onclick="return confirm('Are you sure you want to cancel all running tasks? This will stop all form detection processes.')">
+                            <i class="bi bi-x-circle"></i> Cancel All Tasks
+                        </button>
+                    </form>
+                </div>
             </div>
             <div class="card-body">
                 <!-- Loading indicator -->
