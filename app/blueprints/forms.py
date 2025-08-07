@@ -125,8 +125,14 @@ def table_content():
         except Exception as e:
             return f'<tr><td colspan="8" class="text-center text-danger">Error retrieving form data: {str(e)}</td></tr>'
 
+    has_pending_tasks = any(
+        detection["task_status"] == "pending" for detection in missing_forms_data
+    )
+    has_no_form_present = any(
+        not detection["form_present"] for detection in missing_forms_data
+    )
     # Return just the table rows
-    return render_template("table_content.html", missing_forms=missing_forms_data)
+    return render_template("table_content.html", missing_forms=missing_forms_data, has_pending_tasks=has_pending_tasks, has_no_form_present=has_no_form_present)
 
 
 @forms_bp.route("/get_forms", methods=["POST"])
