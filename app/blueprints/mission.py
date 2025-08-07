@@ -1,5 +1,4 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from contactform.mission import get_all_missions, create_mission
 from contactform.mission.crud import MissionCRUD, get_db
 
 mission_bp = Blueprint("mission", __name__, url_prefix="/mission")
@@ -10,7 +9,7 @@ def mission_list():
     """First page: Show list of missions"""
     try:
         # Get missions from database
-        missions = get_all_missions()
+        missions = MissionCRUD.get_all_missions()
 
         # Convert to dictionary format for template compatibility
         mission_data = []
@@ -30,24 +29,7 @@ def mission_list():
         flash(f"Error loading missions: {str(e)}", "error")
         # Fallback to sample data if database fails
         mission_data = [
-            {
-                "id": 1,
-                "name": "Marketing Campaign 2025",
-                "created_date": "2025-08-01",
-                "status": "Active",
-            },
-            {
-                "id": 2,
-                "name": "Customer Survey",
-                "created_date": "2025-07-15",
-                "status": "Draft",
-            },
-            {
-                "id": 3,
-                "name": "Product Feedback",
-                "created_date": "2025-07-20",
-                "status": "Active",
-            },
+
         ]
 
     return render_template("mission_list.html", missions=mission_data)
@@ -72,7 +54,7 @@ def create_mission_route():
                 "company": "",
             }
 
-            mission = create_mission(mission_name, pre_defined_fields)
+            mission = MissionCRUD.create_mission(mission_name, pre_defined_fields)
             flash(f'Mission "{mission_name}" created successfully!', "success")
             return redirect(url_for("mission.mission_list"))
         except Exception as e:
