@@ -4,7 +4,6 @@ from huey_config import get_task_status
 from flask import Blueprint, render_template, redirect, url_for, session, flash, request
 from contactform.mission.crud import get_db, MissionCRUD
 from contactform.detection.crud import ContactFormDetectionCRUD
-from typing import List
 
 forms_bp = Blueprint("forms", __name__, url_prefix="/forms")
 
@@ -132,7 +131,12 @@ def table_content():
         not detection["form_present"] for detection in missing_forms_data
     )
     # Return just the table rows
-    return render_template("table_content.html", missing_forms=missing_forms_data, has_pending_tasks=has_pending_tasks, has_no_form_present=has_no_form_present)
+    return render_template(
+        "table_content.html",
+        missing_forms=missing_forms_data,
+        has_pending_tasks=has_pending_tasks,
+        has_no_form_present=has_no_form_present,
+    )
 
 
 @forms_bp.route("/get_forms", methods=["POST"])

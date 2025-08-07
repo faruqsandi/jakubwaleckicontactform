@@ -134,7 +134,7 @@
             <a href="{{ url_for('config.config_page') }}" class="btn btn-secondary">
                 <i class="bi bi-arrow-left"></i> Back to Config
             </a>
-            <a href="{{ url_for('submission.submission_config') }}" class="btn btn-primary">
+            <a href="{{ url_for('submission.submission_config') }}" id="next-button" class="btn btn-primary">
                 <i class="bi bi-arrow-right"></i> Next: Configure Fields
             </a>
         </div>
@@ -198,6 +198,29 @@
         }, 2000);
     }
 
+    function updateNextButtonState() {
+        const indicator = document.getElementById('button-state-indicator');
+        const nextButton = document.getElementById('next-button');
+
+        if (indicator && nextButton) {
+            const shouldDisable = indicator.dataset.shouldDisable === 'true';
+
+            if (shouldDisable) {
+                nextButton.classList.remove('btn-primary');
+                nextButton.classList.add('btn-secondary');
+                nextButton.style.pointerEvents = 'none';
+                nextButton.setAttribute('aria-disabled', 'true');
+                nextButton.innerHTML = '<i class="bi bi-clock"></i> Complete all tasks first';
+            } else {
+                nextButton.classList.remove('btn-secondary');
+                nextButton.classList.add('btn-primary');
+                nextButton.style.pointerEvents = 'auto';
+                nextButton.removeAttribute('aria-disabled');
+                nextButton.innerHTML = '<i class="bi bi-arrow-right"></i> Next: Configure Fields';
+            }
+        }
+    }
+
     function toggleAutoRefresh() {
         const toggle = document.getElementById('autoRefreshToggle');
 
@@ -215,6 +238,19 @@
             }
         }
     }
+
+    // Update button state after table content is loaded
+    document.addEventListener('DOMContentLoaded', function () {
+        // Update button state initially after page load
+        setTimeout(updateNextButtonState, 100);
+    });
+
+    // Update button state after HTMX requests
+    document.body.addEventListener('htmx:afterSwap', function (event) {
+        if (event.detail.target.id === 'table-body') {
+            updateNextButtonState();
+        }
+    });
 
     // Clean up interval when page is unloaded
     window.addEventListener('beforeunload', function () {

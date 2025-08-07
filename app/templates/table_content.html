@@ -1,3 +1,8 @@
+<!-- Hidden element to communicate button state -->
+<tr style="display: none;" id="button-state-indicator"
+    data-should-disable="{{ 'true' if (missing_forms and (has_pending_tasks or has_no_form_present)) else 'false' }}">
+</tr>
+
 {% if missing_forms %}
 {% for item in missing_forms %}
 <tr {% if item.status=='completed' %}class="table-success" {% endif %} id="row-{{ item.domain | replace('.', '_') }}">
