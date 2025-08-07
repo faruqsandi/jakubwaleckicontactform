@@ -20,6 +20,18 @@
             ],
             "jinja": true,
             "autoStartBrowser": false
+        },
+        {
+            "name": "Huey Consumer",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "huey.bin.huey_consumer",
+            "args": [
+                "huey_config.huey",
+                "--workers=2"
+            ],
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
