@@ -1,0 +1,84 @@
+{% if missing_forms %}
+{% for item in missing_forms %}
+<tr {% if item.status=='completed' %}class="table-success" {% endif %} id="row-{{ item.domain | replace('.', '_') }}">
+    <td>
+        <i class="bi bi-globe"></i> {{ item.domain }}
+    </td>
+    <td>
+        {% if item.form_url %}
+        <a href="{{ item.form_url }}" target="_blank" class="text-decoration-none">
+            <i class="bi bi-link-45deg"></i> {{ item.form_url }}
+        </a>
+        {% else %}
+        <span class="text-muted">Not detected</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if item.status == 'pending' %}
+        <span class="badge bg-warning">
+            <i class="bi bi-clock"></i> Pending
+        </span>
+        {% elif item.status == 'failed' %}
+        <span class="badge bg-danger">
+            <i class="bi bi-x-circle"></i> Failed
+        </span>
+        {% elif item.status == 'completed' %}
+        <span class="badge bg-success">
+            <i class="bi bi-check-circle"></i> Completed
+        </span>
+        {% elif item.status == 'not_found' %}
+        <span class="badge bg-secondary">
+            <i class="bi bi-question-circle"></i> Not Found
+        </span>
+        {% else %}
+        <span class="badge bg-info">
+            <i class="bi bi-info-circle"></i> {{ item.status }}
+        </span>
+        {% endif %}
+    </td>
+    <td>
+        {% if item.form_present %}
+        <span class="badge bg-success">
+            <i class="bi bi-check-circle"></i> Yes
+        </span>
+        {% else %}
+        <span class="badge bg-warning">
+            <i class="bi bi-question-circle"></i> No/Unknown
+        </span>
+        {% endif %}
+    </td>
+    <td>
+        {% if item.last_updated %}
+        <small class="text-muted">
+            {{ item.last_updated.strftime('%Y-%m-%d %H:%M') if item.last_updated else 'Never' }}
+        </small>
+        {% else %}
+        <small class="text-muted">Never</small>
+        {% endif %}
+    </td>
+    <td>
+        <form method="POST" action="{{ url_for('forms.search_domain_form') }}" style="display: inline;" class="me-2">
+            <input type="hidden" name="domain" value="{{ item.domain }}">
+            <button type="submit" class="btn btn-outline-primary btn-sm" {% if item.status=='pending' %}disabled{% endif
+                %}>
+                <i class="bi bi-search"></i>
+                {% if item.status == 'pending' %}Processing...{% endif %}
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('forms.remove_domain') }}" style="display: inline;">
+            <input type="hidden" name="domain" value="{{ item.domain }}">
+            <button type="submit" class="btn btn-outline-danger btn-sm"
+                onclick="return confirm('Remove {{ item.domain }} from this mission? This will not delete the detection data.')">
+                <i class="bi bi-trash"></i>
+            </button>
+        </form>
+    </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr>
+    <td colspan="6" class="text-center text-muted">
+        <i class="bi bi-info-circle"></i> No domains found. Please upload a CSV file first.
+    </td>
+</tr>
+{% endif %}

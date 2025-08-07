@@ -21,13 +21,28 @@
             </div>
         </div>
 
-        {% if missing_forms %}
+        {% if session.get('csv_uploaded') %}
         <div class="card mb-4">
-            <div class="card-header bg-info text-white">
-                <h5><i class="bi bi-list-check"></i> Form Detection Status for All Domains</h5>
-                <small>Showing all domains with their current form detection status (completed items at bottom)</small>
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <div>
+                    <h5><i class="bi bi-list-check"></i> Form Detection Status for All Domains</h5>
+                    <small>Showing all domains with their current form detection status (completed items at
+                        bottom)</small>
+                </div>
+                <button class="btn btn-outline-light btn-sm" hx-get="{{ url_for('forms.table_content') }}"
+                    hx-target="#table-body" hx-indicator="#refresh-indicator">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh Table
+                </button>
             </div>
             <div class="card-body">
+                <!-- Loading indicator -->
+                <div id="refresh-indicator" class="htmx-indicator text-center py-3">
+                    <div class="spinner-border spinner-border-sm" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="ms-2">Refreshing...</span>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead>
@@ -40,90 +55,24 @@
                                 <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for item in missing_forms %}
-                            <tr {% if item.status=='completed' %}class="table-success" {% endif %}>
-                                <td>
-                                    <i class="bi bi-globe"></i> {{ item.domain }}
-                                </td>
-                                <td>
-                                    {% if item.form_url %}
-                                    <a href="{{ item.form_url }}" target="_blank" class="text-decoration-none">
-                                        <i class="bi bi-link-45deg"></i> {{ item.form_url }}
-                                    </a>
-                                    {% else %}
-                                    <span class="text-muted">Not detected</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if item.status == 'pending' %}
-                                    <span class="badge bg-warning">
-                                        <i class="bi bi-clock"></i> Pending
-                                    </span>
-                                    {% elif item.status == 'failed' %}
-                                    <span class="badge bg-danger">
-                                        <i class="bi bi-x-circle"></i> Failed
-                                    </span>
-                                    {% elif item.status == 'completed' %}
-                                    <span class="badge bg-success">
-                                        <i class="bi bi-check-circle"></i> Completed
-                                    </span>
-                                    {% elif item.status == 'not_found' %}
-                                    <span class="badge bg-secondary">
-                                        <i class="bi bi-question-circle"></i> Not Found
-                                    </span>
-                                    {% else %}
-                                    <span class="badge bg-info">
-                                        <i class="bi bi-info-circle"></i> {{ item.status }}
-                                    </span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if item.form_present %}
-                                    <span class="badge bg-success">
-                                        <i class="bi bi-check-circle"></i> Yes
-                                    </span>
-                                    {% else %}
-                                    <span class="badge bg-warning">
-                                        <i class="bi bi-question-circle"></i> No/Unknown
-                                    </span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if item.last_updated %}
-                                    <small class="text-muted">
-                                        {{ item.last_updated.strftime('%Y-%m-%d %H:%M') if item.last_updated else
-                                        'Never' }}
-                                    </small>
-                                    {% else %}
-                                    <small class="text-muted">Never</small>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <form method="POST" action="{{ url_for('forms.search_domain_form') }}"
-                                        style="display: inline;" class="me-2">
-                                        <input type="hidden" name="domain" value="{{ item.domain }}">
-                                        <button type="submit" class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-search"></i>
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{{ url_for('forms.remove_domain') }}"
-                                        style="display: inline;">
-                                        <input type="hidden" name="domain" value="{{ item.domain }}">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm"
-                                            onclick="return confirm('Remove {{ item.domain }} from this mission? This will not delete the detection data.')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
+                        <tbody id="table-body" hx-get="{{ url_for('forms.table_content') }}" hx-trigger="load, refresh">
+                            <!-- Table content will be loaded here via HTMX -->
+                            <tr>
+                                <td colspan="6" class="text-center">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <span class="ms-2">Loading table data...</span>
                                 </td>
                             </tr>
-                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
 
                 <div class="mt-3">
-                    <form method="POST" action="{{ url_for('forms.get_forms') }}">
+                    <form method="POST" action="{{ url_for('forms.get_forms') }}"
+                        hx-post="{{ url_for('forms.get_forms') }}" hx-trigger="submit" hx-swap="none"
+                        hx-on::after-request="htmx.trigger('#table-body', 'refresh')">
                         <button type="submit" class="btn btn-warning">
                             <i class="bi bi-search"></i> Detect forms for all domains
                         </button>

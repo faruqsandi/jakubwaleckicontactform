@@ -65,13 +65,18 @@ class ContactFormDetection(Base):
         Text, nullable=True
     )  # Form action URL
 
-    # # Detection confidence and status
+    # Detection confidence and status
     # detection_confidence: Mapped[float | None] = mapped_column(
     #     nullable=True
     # )  # 0.0 to 1.0
     detection_status: Mapped[str] = mapped_column(
         String(50), default="pending"
     )  # "pending", "completed", "failed"
+
+    # Huey task ID for background processing
+    task_id: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )  # Store Huey task ID when processing in background
 
     # # Error information
     # error_message: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -1,7 +1,7 @@
 from contactform.detection.selenium_handler import (
     search_domain_form as helper_search_domain_form,
 )
-from flask import Blueprint, render_template, redirect, url_for, session, flash, request
+from flask import Blueprint, render_template, redirect, url_for, session, flash, request, jsonify
 from contactform.mission.crud import get_db, MissionCRUD
 from contactform.detection.crud import ContactFormDetectionCRUD
 
@@ -49,6 +49,22 @@ def missing_forms():
         flash("Please upload CSV file first.", "warning")
         return redirect(url_for("config.config_page"))
 
+    # Don't load table data initially - it will be loaded via HTMX
+    return render_template(
+        "missing_forms.html",
+        mission_name=session.get("current_mission_name"),
+    )
+
+
+@forms_bp.route("/table_content")
+def table_content():
+    """Return table content for the missing forms page (for HTMX)"""
+    if "current_mission_id" not in session:
+        return '<tr><td colspan="6" class="text-center text-danger">Please select a mission first.</td></tr>'
+
+    if not session.get("csv_uploaded"):
+        return '<tr><td colspan="6" class="text-center text-warning">Please upload CSV file first.</td></tr>'
+
     # Get domains from uploaded CSV that are in ContactFormDetection with all statuses
     uploaded_domains = session.get("uploaded_domains", [])
     missing_forms_data = []
@@ -63,9 +79,7 @@ def missing_forms():
 
                     if detections:
                         # Add the latest detection record for this domain
-                        latest_detection = detections[
-                            0
-                        ]  # Assuming they are ordered by date
+                        latest_detection = detections[0]  # Assuming they are ordered by date
                         missing_forms_data.append(
                             {
                                 "domain": domain,
@@ -73,6 +87,8 @@ def missing_forms():
                                 "form_present": latest_detection.contact_form_present,
                                 "form_url": latest_detection.form_url,
                                 "last_updated": latest_detection.last_updated,
+                                "task_id": latest_detection.task_id,
+                                "task_status": "task_status",
                             }
                         )
                     else:
@@ -84,6 +100,8 @@ def missing_forms():
                                 "form_present": False,
                                 "form_url": None,
                                 "last_updated": None,
+                                "task_id": None,
+                                "task_status": None,
                             }
                         )
 
@@ -96,14 +114,10 @@ def missing_forms():
                 db.close()
 
         except Exception as e:
-            flash(f"Error retrieving form data: {str(e)}", "error")
-            missing_forms_data = []
+            return f'<tr><td colspan="6" class="text-center text-danger">Error retrieving form data: {str(e)}</td></tr>'
 
-    return render_template(
-        "missing_forms.html",
-        missing_forms=missing_forms_data,
-        mission_name=session.get("current_mission_name"),
-    )
+    # Return just the table rows
+    return render_template("table_content.html", missing_forms=missing_forms_data)
 
 
 @forms_bp.route("/get_forms", methods=["POST"])
@@ -158,7 +172,7 @@ def get_forms():
 
 @forms_bp.route("/search_domain_form", methods=["POST"])
 def search_domain_form():
-    """Search form information for a specific domain"""
+    """Search form information for a specific domain using background task"""
     if "current_mission_id" not in session:
         flash("Please select a mission first.", "warning")
         return redirect(url_for("mission.mission_list"))
@@ -169,22 +183,38 @@ def search_domain_form():
         return redirect(url_for("forms.missing_forms"))
 
     try:
+        from huey_config import background_form_detection_task
+        from contactform.detection.crud import ContactFormDetectionCRUD
+
         db = get_db()
         try:
-            detections = helper_search_domain_form(domain, db)
-            # raise Exception(
-            #     "Simulated error for testing"
-            # )  # Simulated error for testing
-            if detections:
-                flash(f"Form detection completed for domain '{domain}'!", "success")
-            else:
+            # Get the detection record for this domain
+            detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
+            if not detections:
                 flash(f"No detection record found for domain '{domain}'.", "warning")
+                return redirect(url_for("forms.missing_forms"))
+
+            detection = detections[0]  # Get the first detection record
+
+            # Start background task for form detection
+            task_result = background_form_detection_task(domain)
+            task_id = task_result.id
+
+            # Update the detection record with the task ID and set status to pending
+            ContactFormDetectionCRUD.update(
+                db=db,
+                detection_id=detection.id,
+                detection_status="pending",
+                task_id=task_id
+            )
+
+            flash(f"Form detection started for domain '{domain}'. Task ID: {task_id}", "info")
 
         finally:
             db.close()
 
     except Exception as e:
-        flash(f"Error during form detection for '{domain}': {str(e)}", "error")
+        flash(f"Error starting form detection for '{domain}': {str(e)}", "error")
 
     return redirect(url_for("forms.missing_forms"))
 

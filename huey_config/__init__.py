@@ -52,31 +52,88 @@ def dummy_task(task_name="Default Task", delay_seconds=5):
 
 
 @huey.task()
-def background_form_detection(domain):
+def background_form_detection_task(domain):
     """
-    Background task for form detection.
-    This could be used later for actual form detection work.
+    Background task for form detection using the actual selenium handler.
 
     Args:
         domain (str): Domain to detect forms for
 
     Returns:
-        dict: Detection result
+        dict: Detection result with status and data
     """
-    import time
-    import random
+    try:
+        from contactform.detection.selenium_handler import search_domain_form
+        from contactform.mission.crud import get_db
+        from contactform.detection.crud import ContactFormDetectionCRUD
 
-    # Simulate form detection work
-    time.sleep(random.randint(2, 8))
+        # Get database session
+        db = get_db()
 
-    result = {
-        "domain": domain,
-        "form_detected": random.choice([True, False]),
-        "form_url": f"https://{domain}/contact"
-        if random.choice([True, False])
-        else None,
-        "detection_time": datetime.now().isoformat(),
-        "status": "completed",
-    }
+        try:
+            # Perform actual form detection
+            detection_result = search_domain_form(domain, db)
 
-    return result
+            if detection_result:
+                # Update the detection record to mark as completed and clear task_id
+                ContactFormDetectionCRUD.update(
+                    db=db,
+                    detection_id=detection_result.id,
+                    detection_status="completed",
+                    task_id=None  # Clear task_id when completed
+                )
+
+                return {
+                    "domain": domain,
+                    "status": "completed",
+                    "detection_id": detection_result.id,
+                    "form_detected": detection_result.contact_form_present,
+                    "form_url": detection_result.form_url,
+                    "detection_time": datetime.now().isoformat(),
+                    "success": True
+                }
+            else:
+                return {
+                    "domain": domain,
+                    "status": "failed",
+                    "error": "No detection record found",
+                    "detection_time": datetime.now().isoformat(),
+                    "success": False
+                }
+
+        finally:
+            if db:
+                db.close()
+
+    except Exception as e:
+        # Update detection status to failed if we can
+        try:
+            from contactform.mission.crud import get_db
+            from contactform.detection.crud import ContactFormDetectionCRUD
+
+            db = get_db()
+            try:
+                # Find detection record and mark as failed
+                detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
+                for detection in detections:
+                    if detection.detection_status == "pending":
+                        ContactFormDetectionCRUD.update(
+                            db=db,
+                            detection_id=detection.id,
+                            detection_status="failed",
+                            task_id=None  # Clear task_id when failed
+                        )
+                        break
+            finally:
+                if db:
+                    db.close()
+        except:
+            pass  # Ignore errors in error handling
+
+        return {
+            "domain": domain,
+            "status": "failed",
+            "error": str(e),
+            "detection_time": datetime.now().isoformat(),
+            "success": False
+        }

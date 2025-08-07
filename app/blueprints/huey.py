@@ -5,7 +5,7 @@ This is a hidden route not linked from anywhere for testing purposes.
 
 from datetime import datetime
 import pickle
-from huey_config import huey, dummy_task, background_form_detection
+from huey_config import huey, dummy_task, background_form_detection_task
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 
 
@@ -160,7 +160,7 @@ def trigger_form_detection():
 
     try:
         # Enqueue the task
-        result = background_form_detection(domain=domain)
+        result = background_form_detection_task(domain=domain)
         flash(
             f"Form detection task for '{domain}' has been queued! Task ID: {result.id}",
             "success",
