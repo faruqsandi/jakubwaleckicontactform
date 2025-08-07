@@ -9,11 +9,7 @@ from typing import Any
 from urllib.parse import urljoin, urlparse
 import logging
 
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import WebDriverException
-import chromedriver_autoinstaller  # type: ignore
 
 from sqlalchemy.orm import Session
 from contactform.mission.crud import get_db
@@ -22,50 +18,13 @@ from contactform.detection.models import ContactFormDetection
 from contactform.detection import get_form_information, select_contact_url
 from contactform.gpt import gemini_client
 from contactform.insertion.form_check import get_all_links_from_source
+from contactform.utils.webdriver import setup_webdriver
+from config import Config
 
+config = Config()
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def setup_webdriver(headless: bool = True) -> webdriver.Chrome:
-    """
-    Set up and return a Chrome WebDriver instance.
-
-    Args:
-        headless: Whether to run browser in headless mode
-
-    Returns:
-        Chrome WebDriver instance
-
-    Raises:
-        WebDriverException: If webdriver setup fails
-    """
-    try:
-        chromedriver_autoinstaller.install()
-        options = Options()
-
-        if headless:
-            options.add_argument("--headless")
-
-        # Additional options for better reliability
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-gpu")
-        options.add_argument("--window-size=1920,1080")
-        options.add_argument(
-            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-        )
-
-        service = Service()
-        driver = webdriver.Chrome(service=service, options=options)
-        driver.set_page_load_timeout(30)  # 30 second timeout
-
-        return driver
-
-    except Exception as e:
-        logger.error(f"Failed to setup webdriver: {str(e)}")
-        raise WebDriverException(f"Failed to setup webdriver: {str(e)}")
 
 
 def validate_domain(domain: str) -> str:

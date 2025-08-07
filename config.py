@@ -13,3 +13,4 @@ class Config:
     GOOGLE_SEARCH_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
     SEARCH_ENGINE_ID = os.getenv("SEARCH_ENGINE_ID")
     GOOGLE_AI_API_KEY = os.environ["GOOGLE_AI_API_KEY"]
+    HEADLESS = True
