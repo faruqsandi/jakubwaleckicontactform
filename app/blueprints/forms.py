@@ -4,6 +4,7 @@ from huey_config import get_task_status
 from flask import Blueprint, render_template, redirect, url_for, session, flash, request
 from contactform.mission.crud import get_db, MissionCRUD
 from contactform.detection.crud import ContactFormDetectionCRUD
+from typing import List
 
 forms_bp = Blueprint("forms", __name__, url_prefix="/forms")
 
@@ -130,7 +131,7 @@ def table_content():
 
 @forms_bp.route("/get_forms", methods=["POST"])
 def get_forms():
-    """Trigger form detection for pending domains"""
+    """Trigger form detection for all domains by calling search_domain_form"""
     if "current_mission_id" not in session:
         flash("Please select a mission first.", "warning")
         return redirect(url_for("mission.mission_list"))
@@ -142,40 +143,8 @@ def get_forms():
         flash("No domains to process.", "warning")
         return redirect(url_for("forms.missing_forms"))
 
-    try:
-        db = get_db()
-        try:
-            updated_count = 0
-            for domain in uploaded_domains:
-                detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
-
-                # For now, just update status from pending to completed
-                # In the future, this would trigger actual form detection logic
-                for detection in detections:
-                    if detection.detection_status == "pending":
-                        ContactFormDetectionCRUD.update(
-                            db=db,
-                            detection_id=detection.id,
-                            detection_status="completed",
-                            contact_form_present=True,  # Simulated detection
-                            form_url=f"https://{domain}/contact",  # Default form URL
-                        )
-                        updated_count += 1
-
-            if updated_count > 0:
-                flash(
-                    f"Form detection completed for {updated_count} domains!", "success"
-                )
-            else:
-                flash("No pending domains found to process.", "info")
-
-        finally:
-            db.close()
-
-    except Exception as e:
-        flash(f"Error during form detection: {str(e)}", "error")
-
-    return redirect(url_for("forms.missing_forms"))
+    # Call search_domain_form with all domains
+    return search_domain_form_bulk(uploaded_domains)
 
 
 @forms_bp.route("/search_domain_form", methods=["POST"])
@@ -190,41 +159,90 @@ def search_domain_form():
         flash("No domain specified for form search.", "error")
         return redirect(url_for("forms.missing_forms"))
 
+    return search_domain_form_bulk([domain])
+
+
+def search_domain_form_bulk(domains: list[str]):
+    """Search form information for multiple domains using background tasks"""
+    if "current_mission_id" not in session:
+        flash("Please select a mission first.", "warning")
+        return redirect(url_for("mission.mission_list"))
+
+    if not domains:
+        flash("No domains specified for form search.", "error")
+        return redirect(url_for("forms.missing_forms"))
+
     try:
         from huey_config import background_form_detection_task
 
         db = get_db()
         try:
-            # Get the detection record for this domain
-            detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
-            if not detections:
-                flash(f"No detection record found for domain '{domain}'.", "warning")
-                return redirect(url_for("forms.missing_forms"))
+            started_count = 0
+            for domain in domains:
+                # Get the detection record for this domain
+                detections = ContactFormDetectionCRUD.get_by_domain(db, domain)
+                if not detections:
+                    flash(
+                        f"No detection record found for domain '{domain}'.", "warning"
+                    )
+                    continue
 
-            detection = detections[0]  # Get the first detection record
+                detection = detections[0]  # Get the first detection record
 
-            # Start background task for form detection
-            task_result = background_form_detection_task(domain)
-            task_id = str(task_result.id)  # Convert to string
+                # Skip if already pending to avoid duplicate tasks
+                if detection.detection_status == "pending" and detection.task_id:
+                    continue
 
-            # Update the detection record with the task ID and set status to pending
-            ContactFormDetectionCRUD.update(
-                db=db,
-                detection_id=detection.id,
-                detection_status="pending",
-                task_id=task_id,
-            )
+                # Start background task for form detection
+                task_result = background_form_detection_task(domain)
+                task_id = (
+                    str(task_result.id)
+                    if hasattr(task_result, "id")
+                    else str(task_result)
+                )
 
-            flash(
-                f"Form detection started for domain '{domain}'. Task ID: {task_id}",
-                "info",
-            )
+                # Update the detection record with the task ID and set status to pending
+                ContactFormDetectionCRUD.update(
+                    db=db,
+                    detection_id=detection.id,
+                    detection_status="pending",
+                    task_id=task_id,
+                )
+                started_count += 1
+
+            if started_count > 0:
+                if len(domains) == 1:
+                    flash(
+                        f"Form detection started for domain '{domains[0]}'. Task started.",
+                        "info",
+                    )
+                else:
+                    flash(
+                        f"Form detection started for {started_count} domains out of {len(domains)} total domains.",
+                        "info",
+                    )
+            else:
+                if len(domains) == 1:
+                    flash(
+                        f"Form detection already in progress for domain '{domains[0]}'.",
+                        "info",
+                    )
+                else:
+                    flash(
+                        "All domains are already being processed or have no detection records.",
+                        "info",
+                    )
 
         finally:
             db.close()
 
     except Exception as e:
-        flash(f"Error starting form detection for '{domain}': {str(e)}", "error")
+        if len(domains) == 1:
+            flash(
+                f"Error starting form detection for '{domains[0]}': {str(e)}", "error"
+            )
+        else:
+            flash(f"Error starting form detection for domains: {str(e)}", "error")
 
     return redirect(url_for("forms.missing_forms"))
 
