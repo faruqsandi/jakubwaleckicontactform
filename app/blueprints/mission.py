@@ -28,9 +28,7 @@ def mission_list():
     except Exception as e:
         flash(f"Error loading missions: {str(e)}", "error")
         # Fallback to sample data if database fails
-        mission_data = [
-
-        ]
+        mission_data = []
 
     return render_template("mission_list.html", missions=mission_data)
 

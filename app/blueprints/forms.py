@@ -1,7 +1,5 @@
-from contactform.detection.selenium_handler import (
-    search_domain_form as helper_search_domain_form,
-)
-from flask import Blueprint, render_template, redirect, url_for, session, flash, request, jsonify
+from huey_config import get_task_status
+from flask import Blueprint, render_template, redirect, url_for, session, flash, request
 from contactform.mission.crud import get_db, MissionCRUD
 from contactform.detection.crud import ContactFormDetectionCRUD
 
@@ -60,10 +58,10 @@ def missing_forms():
 def table_content():
     """Return table content for the missing forms page (for HTMX)"""
     if "current_mission_id" not in session:
-        return '<tr><td colspan="6" class="text-center text-danger">Please select a mission first.</td></tr>'
+        return '<tr><td colspan="8" class="text-center text-danger">Please select a mission first.</td></tr>'
 
     if not session.get("csv_uploaded"):
-        return '<tr><td colspan="6" class="text-center text-warning">Please upload CSV file first.</td></tr>'
+        return '<tr><td colspan="8" class="text-center text-warning">Please upload CSV file first.</td></tr>'
 
     # Get domains from uploaded CSV that are in ContactFormDetection with all statuses
     uploaded_domains = session.get("uploaded_domains", [])
@@ -79,7 +77,15 @@ def table_content():
 
                     if detections:
                         # Add the latest detection record for this domain
-                        latest_detection = detections[0]  # Assuming they are ordered by date
+                        latest_detection = detections[
+                            0
+                        ]  # Assuming they are ordered by date
+                        task_status = None
+                        if latest_detection.task_id:
+                            task_status = get_task_status(latest_detection.task_id)[
+                                "status"
+                            ]
+
                         missing_forms_data.append(
                             {
                                 "domain": domain,
@@ -88,7 +94,7 @@ def table_content():
                                 "form_url": latest_detection.form_url,
                                 "last_updated": latest_detection.last_updated,
                                 "task_id": latest_detection.task_id,
-                                "task_status": "task_status",
+                                "task_status": task_status,
                             }
                         )
                     else:
@@ -114,7 +120,7 @@ def table_content():
                 db.close()
 
         except Exception as e:
-            return f'<tr><td colspan="6" class="text-center text-danger">Error retrieving form data: {str(e)}</td></tr>'
+            return f'<tr><td colspan="8" class="text-center text-danger">Error retrieving form data: {str(e)}</td></tr>'
 
     # Return just the table rows
     return render_template("table_content.html", missing_forms=missing_forms_data)
@@ -205,10 +211,13 @@ def search_domain_form():
                 db=db,
                 detection_id=detection.id,
                 detection_status="pending",
-                task_id=task_id
+                task_id=task_id,
             )
 
-            flash(f"Form detection started for domain '{domain}'. Task ID: {task_id}", "info")
+            flash(
+                f"Form detection started for domain '{domain}'. Task ID: {task_id}",
+                "info",
+            )
 
         finally:
             db.close()

@@ -48,6 +48,42 @@
         {% endif %}
     </td>
     <td>
+        {% if item.task_id %}
+        <small class="text-muted font-monospace">
+            {{ item.task_id }}
+        </small>
+        {% else %}
+        <span class="text-muted">-</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if item.task_status %}
+        {% if item.task_status == 'complete' %}
+        <span class="badge bg-success">
+            <i class="bi bi-check-circle"></i> {{ item.task_status.title() }}
+        </span>
+        {% elif item.task_status == 'running' %}
+        <span class="badge bg-primary">
+            <i class="bi bi-play-circle"></i> {{ item.task_status.title() }}
+        </span>
+        {% elif item.task_status == 'pending' %}
+        <span class="badge bg-warning">
+            <i class="bi bi-clock"></i> {{ item.task_status.title() }}
+        </span>
+        {% elif item.task_status == 'failed' %}
+        <span class="badge bg-danger">
+            <i class="bi bi-x-circle"></i> {{ item.task_status.title() }}
+        </span>
+        {% else %}
+        <span class="badge bg-secondary">
+            <i class="bi bi-info-circle"></i> {{ item.task_status.title() }}
+        </span>
+        {% endif %}
+        {% else %}
+        <span class="text-muted">-</span>
+        {% endif %}
+    </td>
+    <td>
         {% if item.last_updated %}
         <small class="text-muted">
             {{ item.last_updated.strftime('%Y-%m-%d %H:%M') if item.last_updated else 'Never' }}
@@ -59,10 +95,10 @@
     <td>
         <form method="POST" action="{{ url_for('forms.search_domain_form') }}" style="display: inline;" class="me-2">
             <input type="hidden" name="domain" value="{{ item.domain }}">
-            <button type="submit" class="btn btn-outline-primary btn-sm" {% if item.status=='pending' %}disabled{% endif
-                %}>
+            <button type="submit" class="btn btn-outline-primary btn-sm" {% if item.task_status=='pending' %}disabled{%
+                endif %}>
                 <i class="bi bi-search"></i>
-                {% if item.status == 'pending' %}Processing...{% endif %}
+                {% if item.task_status == 'pending' %}Processing...{% endif %}
             </button>
         </form>
         <form method="POST" action="{{ url_for('forms.remove_domain') }}" style="display: inline;">
@@ -77,7 +113,7 @@
 {% endfor %}
 {% else %}
 <tr>
-    <td colspan="6" class="text-center text-muted">
+    <td colspan="8" class="text-center text-muted">
         <i class="bi bi-info-circle"></i> No domains found. Please upload a CSV file first.
     </td>
 </tr>

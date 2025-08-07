@@ -51,6 +51,8 @@
                                 <th>Form URL</th>
                                 <th>Status</th>
                                 <th>Form Present</th>
+                                <th>Task ID</th>
+                                <th>Task Status</th>
                                 <th>Last Updated</th>
                                 <th>Actions</th>
                             </tr>
@@ -58,7 +60,7 @@
                         <tbody id="table-body" hx-get="{{ url_for('forms.table_content') }}" hx-trigger="load, refresh">
                             <!-- Table content will be loaded here via HTMX -->
                             <tr>
-                                <td colspan="6" class="text-center">
+                                <td colspan="8" class="text-center">
                                     <div class="spinner-border spinner-border-sm" role="status">
                                         <span class="visually-hidden">Loading...</span>
                                     </div>

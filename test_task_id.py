@@ -2,6 +2,7 @@
 """
 Test script to verify the task_id functionality works
 """
+
 from contactform.detection.crud import ContactFormDetectionCRUD
 from contactform.mission.crud import get_db
 import sys
@@ -26,7 +27,7 @@ def test_task_id_functionality():
             website_antibot_detection=False,
             form_antibot_detection=False,
             detection_status="pending",
-            task_id="test-task-123"
+            task_id="test-task-123",
         )
 
         print(f"✓ Created test detection record with ID: {test_detection.id}")
@@ -44,7 +45,7 @@ def test_task_id_functionality():
             db=db,
             detection_id=test_detection.id,
             task_id="updated-task-456",
-            detection_status="completed"
+            detection_status="completed",
         )
 
         if updated and updated.task_id == "updated-task-456":

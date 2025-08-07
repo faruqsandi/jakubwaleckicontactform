@@ -1,10 +1,8 @@
-"""
-Huey configuration for background task processing.
-"""
-
+from huey.api import Result, Task
 import os
 from huey import SqliteHuey
 from datetime import datetime
+from typing import Dict, Any
 
 # Use SQLite database for Huey tasks - now in the same directory as this module
 HUEY_DB_PATH = os.path.join(os.path.dirname(__file__), "huey_tasks.db")
@@ -80,7 +78,7 @@ def background_form_detection_task(domain):
                     db=db,
                     detection_id=detection_result.id,
                     detection_status="completed",
-                    task_id=None  # Clear task_id when completed
+                    # task_id=None  # Clear task_id when completed
                 )
 
                 return {
@@ -90,7 +88,7 @@ def background_form_detection_task(domain):
                     "form_detected": detection_result.contact_form_present,
                     "form_url": detection_result.form_url,
                     "detection_time": datetime.now().isoformat(),
-                    "success": True
+                    "success": True,
                 }
             else:
                 return {
@@ -98,7 +96,7 @@ def background_form_detection_task(domain):
                     "status": "failed",
                     "error": "No detection record found",
                     "detection_time": datetime.now().isoformat(),
-                    "success": False
+                    "success": False,
                 }
 
         finally:
@@ -121,7 +119,7 @@ def background_form_detection_task(domain):
                             db=db,
                             detection_id=detection.id,
                             detection_status="failed",
-                            task_id=None  # Clear task_id when failed
+                            task_id=None,  # Clear task_id when failed
                         )
                         break
             finally:
@@ -135,5 +133,47 @@ def background_form_detection_task(domain):
             "status": "failed",
             "error": str(e),
             "detection_time": datetime.now().isoformat(),
-            "success": False
+            "success": False,
         }
+
+
+def get_task_status(task_id: str) -> dict[str, Any]:
+    """
+    Retrieves the status of a Huey task: pending, completed, or failed.
+
+    Args:
+        huey_instance (Huey): The active Huey instance.
+        task_id (str): The Huey task ID to check.
+
+    Returns:
+        Dict[str, str]: A dictionary containing the task_id and its status.
+                        Possible statuses are 'completed', 'pending', or 'failed'.
+    """
+    # # Get the Result handle for the given task ID.
+    # result_handle: Result | None = huey.result(id=task_id, preserve=True)
+    result_handle: Result | None = Result(huey=huey, task=Task(id=task_id))
+
+    # # A revoked task is considered a form of failure.
+
+    # if result_handle is None:
+    #     return {"task_id": task_id, "status": "not_found"}
+    if result_handle.is_revoked():
+        return {"task_id": task_id, "status": "failed"}
+
+    try:
+        # Use get(blocking=False) to check for a result without waiting.
+        # This is the key to differentiating states.
+        result = result_handle.get(blocking=False, preserve=True)
+
+        if result is not None:
+            # If get() returns a value, the task is complete.
+            return {"task_id": task_id, "status": "completed"}
+        else:
+            # If get() returns None, the task is not yet finished.
+            # Huey's API doesn't distinguish between "pending" (in queue)
+            # and "in progress" (being executed), so we group them.
+            return {"task_id": task_id, "status": "pending"}
+
+    except Exception:
+        # If result_handle.get() raises an exception, the task itself has failed.
+        return {"task_id": task_id, "status": "failed"}
