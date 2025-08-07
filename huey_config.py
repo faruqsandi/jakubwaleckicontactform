@@ -1,16 +1,17 @@
 """
 Huey configuration for background task processing.
 """
+
 import os
 from huey import SqliteHuey
 from datetime import datetime
 
 # Use SQLite database for Huey tasks
-HUEY_DB_PATH = os.path.join(os.path.dirname(__file__), 'huey_tasks.db')
+HUEY_DB_PATH = os.path.join(os.path.dirname(__file__), "huey_tasks.db")
 
 # Initialize Huey with SQLite backend
 huey = SqliteHuey(
-    name='contactform_huey',
+    name="contactform_huey",
     filename=HUEY_DB_PATH,
     immediate=False,  # Set to True for testing to run tasks immediately
     # consumer_options={'workers': 4, 'periodic': True}
@@ -40,11 +41,11 @@ def dummy_task(task_name="Default Task", delay_seconds=5):
     duration = (end_time - start_time).total_seconds()
 
     result = {
-        'task_name': task_name,
-        'start_time': start_time.isoformat(),
-        'end_time': end_time.isoformat(),
-        'duration_seconds': duration,
-        'status': 'completed'
+        "task_name": task_name,
+        "start_time": start_time.isoformat(),
+        "end_time": end_time.isoformat(),
+        "duration_seconds": duration,
+        "status": "completed",
     }
 
     return result
@@ -69,11 +70,13 @@ def background_form_detection(domain):
     time.sleep(random.randint(2, 8))
 
     result = {
-        'domain': domain,
-        'form_detected': random.choice([True, False]),
-        'form_url': f"https://{domain}/contact" if random.choice([True, False]) else None,
-        'detection_time': datetime.now().isoformat(),
-        'status': 'completed'
+        "domain": domain,
+        "form_detected": random.choice([True, False]),
+        "form_url": f"https://{domain}/contact"
+        if random.choice([True, False])
+        else None,
+        "detection_time": datetime.now().isoformat(),
+        "status": "completed",
     }
 
     return result
