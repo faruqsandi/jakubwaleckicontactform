@@ -38,6 +38,12 @@ class FormSubmission(Base):
         String(50), default="pending"
     )  # "pending", "success", "failed", "blocked"
 
+    # Task tracking fields
+    task_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    task_status: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )  # "pending", "completed", "failed"
+
     # Additional metadata
     submission_date: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
@@ -58,4 +64,4 @@ class FormSubmission(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<FormSubmission(id={self.id}, mission_id={self.mission_id}, domain='{self.domain}', status='{self.status}')>"
+        return f"<FormSubmission(id={self.id}, mission_id={self.mission_id}, domain='{self.domain}', status='{self.status}', task_id='{self.task_id}', task_status='{self.task_status}')>"

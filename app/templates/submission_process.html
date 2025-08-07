@@ -34,43 +34,114 @@
                                         <th>Domain</th>
                                         <th>Form Status</th>
                                         <th>Submission Status</th>
+                                        {% if is_submitted %}
+                                        <th>Task ID</th>
+                                        <th>Task Status</th>
+                                        {% endif %}
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% if is_submitted %}
+                                    {% for submission in form_submissions %}
+                                    <tr>
+                                        <td>
+                                            <i class="bi bi-globe"></i> {{ submission.domain }}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Submitted
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if submission.status == "success" %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Success
+                                            </span>
+                                            {% elif submission.status == "failed" %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle"></i> Failed
+                                            </span>
+                                            {% else %}
+                                            <span class="badge bg-warning">
+                                                <i class="bi bi-clock"></i> {{ submission.status|title }}
+                                            </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if submission.task_id %}
+                                            <code class="small">{{ submission.task_id[:8] }}...</code>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if submission.task_status == "completed" %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Completed
+                                            </span>
+                                            {% elif submission.task_status == "failed" %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle"></i> Failed
+                                            </span>
+                                            {% elif submission.task_status == "pending" %}
+                                            <span class="badge bg-warning">
+                                                <i class="bi bi-hourglass-split"></i> Pending
+                                            </span>
+                                            {% else %}
+                                            <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    {% else %}
                                     {% for domain in domains %}
                                     <tr>
                                         <td>
                                             <i class="bi bi-globe"></i> {{ domain }}
                                         </td>
                                         <td>
-                                            {% if is_submitted %}
-                                            <span class="badge bg-success">
-                                                <i class="bi bi-check-circle"></i> Submitted
-                                            </span>
-                                            {% else %}
                                             <span class="badge bg-success">
                                                 <i class="bi bi-check-circle"></i> Ready
                                             </span>
-                                            {% endif %}
                                         </td>
                                         <td>
-                                            {% if is_submitted %}
-                                            <span class="badge bg-info">
-                                                <i class="bi bi-check-circle"></i> Completed
-                                            </span>
-                                            {% else %}
                                             <span class="badge bg-secondary">
                                                 <i class="bi bi-clock"></i> Pending
                                             </span>
-                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
+                                    {% endif %}
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
+
+                <!-- Error Details Section -->
+                {% if is_submitted %}
+                {% set failed_submissions = form_submissions | selectattr('status', 'equalto', 'failed') | list %}
+                {% if failed_submissions %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="text-danger"><i class="bi bi-exclamation-triangle"></i> Failed Submissions</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for submission in failed_submissions %}
+                        <div class="alert alert-danger">
+                            <h6><i class="bi bi-globe"></i> {{ submission.domain }}</h6>
+                            {% if submission.error_message %}
+                            <p class="mb-0 small">{{ submission.error_message }}</p>
+                            {% endif %}
+                            {% if submission.task_id %}
+                            <p class="mb-0 small text-muted">Task ID: <code>{{ submission.task_id }}</code></p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                {% endif %}
             </div>
 
             <div class="col-md-4">
@@ -105,6 +176,12 @@
                         </div>
 
                         <div class="d-grid gap-2">
+                            {% if is_submitted %}
+                            <a href="{{ url_for('submission.submission_process') }}" class="btn btn-outline-primary">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh Status
+                            </a>
+                            {% endif %}
+
                             <button type="button" class="btn btn-outline-info" data-bs-toggle="modal"
                                 data-bs-target="#previewModal">
                                 <i class="bi bi-eye"></i> Preview Data
@@ -177,4 +254,30 @@
         </div>
     </div>
 </div>
+
+{% if is_submitted %}
+<script>
+    // Auto-refresh the page every 30 seconds to check task status updates
+    // Only if there are pending tasks
+    {% set has_pending_tasks = form_submissions | selectattr('task_status', 'equalto', 'pending') | list | length > 0 %}
+    {% if has_pending_tasks %}
+    setTimeout(function () {
+        location.reload();
+    }, 30000); // 30 seconds
+
+    // Add visual indicator for auto-refresh
+    document.addEventListener('DOMContentLoaded', function () {
+        var alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-info alert-dismissible fade show mt-3';
+        alertDiv.innerHTML = `
+        <i class="bi bi-arrow-clockwise"></i> 
+        Auto-refreshing page every 30 seconds to check task status...
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+        document.querySelector('.row').prepend(alertDiv);
+    });
+    {% endif %}
+</script>
+{% endif %}
+
 {% endblock %}

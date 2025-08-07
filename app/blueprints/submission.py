@@ -5,6 +5,7 @@ from contactform.mission.crud import MissionCRUD, get_db
 from contactform.insertion.models import FormSubmission
 from datetime import datetime, timezone
 from typing import Any
+from huey_config import background_form_submission_task
 
 submission_bp = Blueprint("submission", __name__, url_prefix="/submission")
 
@@ -269,10 +270,12 @@ def submission_process():
         if mission.submitted_date is None:
             # Mission not yet submitted - use domains from session
             domains = session.get("uploaded_domains", sample_domains)
+            form_submissions = []
             is_submitted = False
         else:
-            # Mission already submitted - get domains from form_submissions
-            domains = [submission.domain for submission in mission.form_submissions]
+            # Mission already submitted - get form_submissions with task info
+            form_submissions = mission.form_submissions
+            domains = [submission.domain for submission in form_submissions]
             is_submitted = True
 
     finally:
@@ -281,6 +284,7 @@ def submission_process():
     return render_template(
         "submission_process.html",
         domains=domains,
+        form_submissions=form_submissions,
         mission_name=session.get("current_mission_name"),
         predefined_values=predefined_values,
         is_submitted=is_submitted,
@@ -318,6 +322,7 @@ def submit_forms():
         mission.submitted_date = datetime.now(timezone.utc)
 
         # Create FormSubmission instances for each domain
+        form_submissions: list[FormSubmission] = []
         for domain in domains:
             form_submission = FormSubmission(
                 mission_id=mission_id,
@@ -326,8 +331,21 @@ def submit_forms():
                 status="pending",
             )
             db.add(form_submission)
+            form_submissions.append(form_submission)
 
         db.commit()
+
+        # Trigger background tasks for each form submission
+        for form_submission in form_submissions:
+            task = background_form_submission_task(form_submission.id)
+            # Store task ID and status for tracking
+            form_submission.task_id = str(
+                task
+            )  # task object str representation is the task ID
+            form_submission.task_status = "pending"
+
+        db.commit()
+
         flash("Forms submitted successfully to all domains!", "success")
 
     except Exception as e:
