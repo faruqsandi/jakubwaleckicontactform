@@ -160,10 +160,11 @@ def search_domain_form(
             )
 
         # Set up webdriver
-        driver = setup_webdriver(headless=False)
+        driver = setup_webdriver(headless=config.HEADLESS)
 
         # Step 1: Navigate to main domain
         logger.info(f"Navigating to: {domain_url}")
+        driver.set_page_load_timeout(60)  # Set 60 second timeout
         driver.get(domain_url)
 
         # Get page source
@@ -227,6 +228,7 @@ def search_domain_form(
 
         # Step 5: Navigate to contact page
         logger.info(f"Navigating to contact page: {contact_page_url}")
+        driver.set_page_load_timeout(60)  # Set 60 second timeout
         driver.get(contact_page_url)
         contact_page_source = driver.page_source
 

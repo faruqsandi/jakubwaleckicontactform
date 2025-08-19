@@ -6,6 +6,7 @@ from contactform.insertion.models import FormSubmission
 from datetime import datetime, timezone
 from typing import Any
 from huey_config import background_form_submission_task
+from huey.api import Task
 
 submission_bp = Blueprint("submission", __name__, url_prefix="/submission")
 
@@ -337,11 +338,9 @@ def submit_forms():
 
         # Trigger background tasks for each form submission
         for form_submission in form_submissions:
-            task = background_form_submission_task(form_submission.id)
+            task: Task = background_form_submission_task(form_submission.id)
             # Store task ID and status for tracking
-            form_submission.task_id = str(
-                task
-            )  # task object str representation is the task ID
+            form_submission.task_id = task.id
             form_submission.task_status = "pending"
 
         db.commit()

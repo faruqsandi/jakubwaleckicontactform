@@ -20,7 +20,9 @@ from contactform.insertion.form_check import (
     fill_and_submit_form,
     verify_form_elements,
 )
+from config import Config
 
+config = Config()
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -69,7 +71,9 @@ def submit_contact_form(
         )
 
         if not form_submission:
-            raise ValueError(f"FormSubmission record not found for ID: {form_submission_id}")
+            raise ValueError(
+                f"FormSubmission record not found for ID: {form_submission_id}"
+            )
 
         domain = form_submission.domain
 
@@ -118,10 +122,11 @@ def submit_contact_form(
 
         # Set up WebDriver
         try:
-            driver = setup_webdriver(headless=False)
+            driver = setup_webdriver(headless=config.HEADLESS)
 
             # Navigate to form URL
             logger.info(f"Navigating to form URL: {detection.form_url}")
+            driver.set_page_load_timeout(60)  # Set 60 second timeout
             driver.get(detection.form_url)
 
             # Prepare form_info structure from detection data
@@ -189,9 +194,7 @@ def submit_contact_form(
 
             # Fill and submit the form
             logger.info("Filling and submitting form")
-            submission_result = fill_and_submit_form(
-                driver, form_info, mission_values
-            )
+            submission_result = fill_and_submit_form(driver, form_info, mission_values)
 
             if submission_result is True:
                 # Update FormSubmission with success
@@ -248,7 +251,9 @@ def submit_contact_form(
             form_submission.error_message = f"WebDriver error: {str(e)}"
             db_session.commit()
 
-            logger.error(f"WebDriver error for submission ID {form_submission_id}: {str(e)}")
+            logger.error(
+                f"WebDriver error for submission ID {form_submission_id}: {str(e)}"
+            )
             return {
                 "form_submission_id": form_submission_id,
                 "domain": domain,
@@ -264,7 +269,9 @@ def submit_contact_form(
 
     except Exception as e:
         # Handle any other unexpected errors
-        logger.error(f"Unexpected error for submission ID {form_submission_id}: {str(e)}")
+        logger.error(
+            f"Unexpected error for submission ID {form_submission_id}: {str(e)}"
+        )
 
         try:
             form_submission = (

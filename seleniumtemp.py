@@ -27,6 +27,7 @@ driver = webdriver.Chrome(service=service, options=options)
 
 url = "https://50safe.pl/"
 # Step 1: Open Google
+driver.set_page_load_timeout(60)  # Set 60 second timeout
 driver.get(url)
 
 source = driver.page_source
@@ -35,6 +36,7 @@ all_links = get_all_links_from_source(source, url)
 contact_page = select_contact_url(gemini_client, all_links)
 
 
+driver.set_page_load_timeout(60)  # Set 60 second timeout
 driver.get(contact_page)
 contact_page_source = driver.page_source
 

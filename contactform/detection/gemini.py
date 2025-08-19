@@ -10,18 +10,34 @@ def select_contact_url(client: genai.Client, url_list: list[tuple[str, str]]) ->
         raise ValueError("The URL list is empty.")
 
     # Construct a prompt for Gemini to analyze the links
-    prompt = """
-    Analyze the following list of website links (text and URL) and identify which one most likely points to a contact page or about page.
-    Consider both the link text and URL path. Return only the index number (0-based) of the best match.
-    The contanct page should in the same domain.
-    Links:
+    prompt = """You are analyzing a list of website links to find the CONTACT PAGE. The website may be in Polish or English.
+
+PRIORITY ORDER (choose the highest priority match):
+1. CONTACT PAGES - Look for these keywords in link text or URL:
+   - English: "contact", "contact us", "get in touch", "reach us", "write to us"
+   - Polish: "kontakt", "skontaktuj się", "napisz do nas", "kontakt z nami"
+   - URL patterns: "/contact", "/kontakt", "/contact-us", "/kontakt-z-nami"
+
+2. ABOUT/COMPANY PAGES (only if no contact page found):
+   - English: "about", "about us", "company", "team", "who we are"
+   - Polish: "o nas", "o firmie", "kim jesteśmy", "zespół", "firma"
+   - URL patterns: "/about", "/o-nas", "/o-firmie", "/about-us"
+
+RULES:
+- Return ONLY the index number (0-based) of the BEST match
+- Prefer exact "contact"/"kontakt" matches over about pages
+- Prefer pages from the SAME DOMAIN (not external links)
+- If multiple contact pages exist, choose the most direct one
+- If NO contact or about pages found, return the index of the most relevant page
+
+Links to analyze:
     """
 
     # Add each link to the prompt
     for i, (text, url) in enumerate(url_list):
         prompt += f"{i}: Text: '{text}', URL: '{url}'\n"
 
-    prompt += "\nReturn only the index number of the best contact/about page link:"
+    prompt += f"\nReturn ONLY the index number (0-{len(url_list)}) of the best contact page!"
 
     try:
         # Send the prompt to Gemini
@@ -41,14 +57,41 @@ def select_contact_url(client: genai.Client, url_list: list[tuple[str, str]]) ->
     except Exception as e:
         print(f"Error calling Gemini API: {e}")
 
-    # # Fallback: Use a heuristic approach
-    # contact_keywords = ["contact", "about", "reach us", "get in touch", "support", "team"]
-    # for text, url in url_list:
-    #     text_lower = text.lower()
-    #     url_lower = url.lower()
-    #     for keyword in contact_keywords:
-    #         if keyword in text_lower or keyword in url_lower:
-    #             return url
+    # Fallback: Use a heuristic approach with Polish and English keywords
+    contact_keywords = [
+        # English keywords
+        "contact", "contact us", "get in touch", "reach us", "write to us", "support",
+        # Polish keywords
+        "kontakt", "skontaktuj się", "napisz do nas", "kontakt z nami",
+        # URL patterns
+        "/contact", "/kontakt", "/contact-us", "/kontakt-z-nami"
+    ]
+
+    about_keywords = [
+        # English keywords
+        "about", "about us", "company", "team", "who we are",
+        # Polish keywords
+        "o nas", "o firmie", "kim jesteśmy", "zespół", "firma",
+        # URL patterns
+        "/about", "/o-nas", "/o-firmie", "/about-us"
+    ]
+
+    # First try to find contact pages
+    for text, url in url_list:
+        text_lower = text.lower()
+        url_lower = url.lower()
+        for keyword in contact_keywords:
+            if keyword in text_lower or keyword in url_lower:
+                return url
+
+    # If no contact page found, try about pages
+    for text, url in url_list:
+        text_lower = text.lower()
+        url_lower = url.lower()
+        for keyword in about_keywords:
+            if keyword in text_lower or keyword in url_lower:
+                return url
+
     raise ValueError("No suitable contact page found in the provided URLs.")
 
 
