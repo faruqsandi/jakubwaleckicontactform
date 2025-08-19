@@ -1,6 +1,7 @@
 from flask import Flask, redirect, url_for, session, flash
 from app.blueprints import mission_bp, config_bp, forms_bp, submission_bp, huey_bp
 from contactform.mission import create_tables
+import chromedriver_autoinstaller
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = (
@@ -20,7 +21,7 @@ app.register_blueprint(forms_bp)
 app.register_blueprint(submission_bp)
 app.register_blueprint(huey_bp)
 
-
+chromedriver_autoinstaller.install()
 @app.route("/")
 def index():
     """Redirect to mission list"""

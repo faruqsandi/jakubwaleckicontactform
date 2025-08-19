@@ -10,7 +10,7 @@
             "request": "launch",
             "module": "flask",
             "env": {
-                "FLASK_APP": "app\\app.py",
+                "FLASK_APP": "app/app.py",
                 "FLASK_DEBUG": "1"
             },
             "args": [
@@ -32,6 +32,23 @@
             ],
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}"
-        }
+        },
+        {
+            "name": "Windows Python Debugger: Flask",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "flask",
+            "env": {
+                "FLASK_APP": "app\\app.py",
+                "FLASK_DEBUG": "1"
+            },
+            "args": [
+                "run",
+                "--no-debugger",
+                "--no-reload"
+            ],
+            "jinja": true,
+            "autoStartBrowser": false
+        },
     ]
 }
