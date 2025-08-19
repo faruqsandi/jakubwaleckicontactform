@@ -16,7 +16,14 @@ export FLASK_DEBUG=1
 
 nohup uv run flask run --no-debugger --no-reload &> flask.log  & echo "$!" > app-pid
 nohup uv run huey_consumer huey_config.huey --workers=2 --verbose &> huey.log & echo "$!" > huey-pid
-xdg-open http://127.0.0.1:5000/ &> /dev/null || echo "Could not open browser automatically."
 
+# Open browser depending on OS
+if [[ "$(uname)" == "Darwin" ]]; then
+    open http://127.0.0.1:5000/ &> /dev/null || echo "Could not open browser automatically."
+else
+    xdg-open http://127.0.0.1:5000/ &> /dev/null || echo "Could not open browser automatically."
+fi
+
+echo "Open http://127.0.1:5000/ in your browser to access the application."
 echo "Both services started in background. Logs: flask.log, huey.log"
 echo "Use ./stop.sh to stop them."
